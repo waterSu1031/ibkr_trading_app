@@ -2,9 +2,9 @@ name: Deploy to AWS EKS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "__disabled__" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "__disabled__" ]
 
 env:
   AWS_REGION: us-east-1
