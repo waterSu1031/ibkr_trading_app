@@ -257,12 +257,13 @@ class TradingApp:
             self.reporter.generate_report()
 
 
+trading_app = TradingApp()
+
+
 def main():
-    app = TradingApp()
-    app.run()
+    trading_app = TradingApp()
+    trading_app.run()
 
 
 if __name__ == "__main__":
     main()
-
-
