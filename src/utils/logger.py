@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import datetime
 from ..config import TradingConfig  # Updated import path
 
+
 def setup_logger(name: str) -> logging.Logger:
     """Setup logger with file and console handlers"""
     config = TradingConfig()
@@ -34,5 +35,5 @@ def setup_logger(name: str) -> logging.Logger:
     # Add handlers to logger
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
-    
+
     return logger

@@ -1,24 +1,26 @@
 from threading import Thread
-from src.trading_app import trading_app
-from src.web_app import web_app
 import uvicorn
 import time
 
+from src.trading_app import trading_app
+from src.web_app import web_app
+
 
 def main():
-    def run_trading():
-        # trading_app = TradingApp()
-        trading_app.run()
+    # 1) 트레이딩 앱 연결
+    # trading_app.connect(port=7497)      # TWS   실계정 7496  페이퍼 7497
+    trading_app.connect(port=4002)    # IBG   실계정 4001  페이퍼 4002
 
-    def run_web():
-        # web_app = WebApp()
-        # web_app.run()
-        uvicorn.run(web_app, host="127.0.0.1", port=8080)
+    # 2) 웹서버 띄우기
+    Thread(target=lambda: uvicorn.run(web_app, host="127.0.0.1", port=8000), daemon=True).start()
 
-    # 쓰레드로 실행
-    Thread(target=run_trading).start()
-    # time.sleep(3)
-    run_web()
+    # 3) 정기적 report 전송
+    try:
+        while True:
+            time.sleep(3600)
+            trading_app.send_report()
+    except KeyboardInterrupt:
+        trading_app.send_report()
 
 
 if __name__ == "__main__":

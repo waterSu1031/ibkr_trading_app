@@ -1,269 +1,219 @@
 from typing import Optional, Dict
-import sys
 import os
-from datetime import datetime
+import time
+import logging
+from ib_insync import IB
+
 from .trading.market import MarketData
 from .trading.order import OrderManager
 from .utils.logger import setup_logger
 from .utils.reporter import Reporter
 from .utils.screenshotter import Screenshotter
 from .utils.trading_hours import TradingHours
-from .utils.email_sender import EmailSender, TradingSummary
-from .exceptions.trading_exceptions import TradingException
+from .utils.email_sender import EmailSender
+from src.exceptions.trading_exceptions import TradingException
+from src.exceptions.trading_exceptions import MarketDataException
 
-
+logger = logging.getLogger(__name__)
 class TradingApp:
     def __init__(self):
-        self.logger = setup_logger("trading_app")
-        self.market = MarketData()
-        self.order_manager = OrderManager()
-        self.reporter = Reporter()
-        self.screenshotter = Screenshotter()
-        self.trading_hours = TradingHours()
-        self.email_sender = EmailSender(raise_on_missing_credentials=False)
-        self.spx_base_price: Optional[float] = None
-        self.trading_summary: TradingSummary = {
-            # Required fields
-            'total_trades': 0,
-            'trading_mode': 'Unknown',
-            'symbol': 'Unknown',
-            # Optional fields
-            'spx_base_price': None,
-            'spx_final_price': None,
-            'total_spx_drop': None,
-            'entry_price': None
-        }
+        self.ib = IB()
+        self.connection_timeout = 30  # 30 seconds timeout
+        self.retry_interval = 5  # 5 seconds between retries
+        self.max_retries = 3  # Maximum number of connection attempts
 
-    def connect_to_server(self, port: int) -> bool:
-        """Connect to IBKR server"""
-        try:
-            success = self.market.connect(port)
-            if success:
-                self.logger.info(f"Connected to IBKR on port {port}")
-                return True
-            return False
-        except Exception as e:
-            self.logger.error(f"Connection error: {str(e)}")
-            return False
+        self.logger      = setup_logger("trading_app")
+        self.market      = MarketData(self.ib)
+        self.order_manager   = OrderManager(self.ib)
+        self.reporter    = Reporter()
+        self.screenshot  = Screenshotter()
+        self.trading_hours       = TradingHours()
+        self.emailer     = EmailSender(raise_on_missing_credentials=False)
+        # positions: symbol → {'side':'LONG'|'SHORT', 'quantity':int, 'entry_price':float}
+        self.positions: Dict[str, Dict] = {}
 
-    def check_connection(self) -> bool:
-        """Verify connection status"""
-        return self.market.is_connected()
+    def connect(self, port: int, host: str = "127.0.0.1", client_id: int = 1) -> bool:
+        """Connect to IBKR with retries"""
+        for attempt in range(self.max_retries):
+            try:
+                # Try to disconnect if there's an existing connection
+                if self.ib.isConnected():
+                    self.ib.disconnect()
+                    time.sleep(1)  # Wait a bit before reconnecting
 
-    def monitor_spx(self) -> float:
-        """Monitor SPX price and calculate drop percentage"""
-        if self.spx_base_price is None:
-            self.spx_base_price = self.market.get_market_price("SPX")
-            if self.spx_base_price:
-                self.trading_summary['spx_base_price'] = self.spx_base_price
-            self.logger.info(f"SPX base price set: ${self.spx_base_price}")
-        
-        current_price = self.market.get_market_price("SPX")
-        if current_price and self.spx_base_price:
-            drop = ((self.spx_base_price - current_price) / self.spx_base_price) * 100
-            self.logger.info(f"SPX Drop: {drop:.2f}%")
-            return drop
-        return 0.0
-
-    def handle_market_closed(self) -> bool:
-        """Handle market closed situation. Returns True if should continue, False if should exit"""
-        wait_time = self.trading_hours.time_until_market_open()
-        hours = wait_time // 3600
-        minutes = (wait_time % 3600) // 60
-        
-        print(f"\nMarket is currently closed.")
-        print(f"Time until market opens: {hours} hours and {minutes} minutes")
-        print("\nOptions:")
-        print("1. Wait for market to open")
-        print("2. Exit application")
-        
-        while True:
-            choice = input("\nEnter your choice (1 or 2): ")
-            if choice == "1":
-                self.logger.info(f"Waiting {hours} hours and {minutes} minutes until market opens")
-                return True
-            elif choice == "2":
-                self.logger.info("User chose to exit during market closed period")
-                return False
-            else:
-                print("Invalid choice. Please enter 1 or 2.")
-
-    def send_trading_report(self) -> None:
-        """Generate and send trading report via email"""
-        try:
-            # Update final SPX price
-            current_spx = self.market.get_market_price("SPX")
-            if current_spx and self.spx_base_price:
-                self.trading_summary['spx_final_price'] = current_spx
-                self.trading_summary['total_spx_drop'] = (
-                    (self.spx_base_price - current_spx) / self.spx_base_price * 100
+                # Attempt connection with timeout
+                self.ib.connect(
+                    host=host,
+                    port=port,
+                    clientId=client_id,
+                    timeout=self.connection_timeout
                 )
 
-            # Generate reports
-            report_paths = self.reporter.generate_report()
+                # Wait for connection to stabilize
+                time.sleep(1)
 
-            # If email is configured, try to send report
-            recipient_email = os.getenv('TRADING_REPORT_EMAIL')
-            if recipient_email:
-                self.email_sender.send_report(recipient_email, report_paths, self.trading_summary)
-            else:
-                self.logger.info("No recipient email configured. Skipping email report.")
-                
-        except Exception as e:
-            self.logger.error(f"Error sending trading report: {str(e)}")
+                # Enable delayed market data
+                self.ib.reqMarketDataType(3)  # 3 = Delayed data
+                logger.info("Enabled delayed market data")
 
-    def execute_trade(self, symbol: str, drop_level: int) -> bool:
-        """Execute trade based on SPX drop level"""
+                # Verify connection
+                if self.ib.isConnected():
+                    print(f"Successfully connected to IBKR on port {port}")
+                    return True
+
+            except Exception as e:
+                print(f"Connection attempt {attempt + 1} failed: {str(e)}")
+                if attempt < self.max_retries - 1:  # Don't sleep on last attempt
+                    print(f"Retrying in {self.retry_interval} seconds...")
+                    time.sleep(self.retry_interval)
+
+        raise MarketDataException("Failed to connect after all retry attempts")
+
+    def disconnect(self):
+        """Disconnect from IBKR"""
+        if self.ib.isConnected():
+            self.ib.disconnect()
+
+    def is_connected(self) -> bool:
+        """Check if connected to IBKR"""
+        return self.ib.isConnected()
+
+    # def connect(self, port: int) -> bool:
+    #     try:
+    #         ok = self.market.connect(port)
+    #         ok = self.ib.connect(port, clientId=123)
+    #         self.logger.info(f"Connected to IBKR on port {port}" if ok else f"Connection failed on port {port}")
+    #         return ok
+    #     except Exception as e:
+    #         self.logger.error(f"IBKR connect error: {e}")
+    #         return False
+
+
+    def handle_signal(
+            self,
+            symbol: str,
+            action: str,
+            quantity: int,
+            order_id: str,
+            order_type: str = "MKT",
+            limit_price: float = 0.0,
+            stop_price: float = 0.0,
+            slippage: float = 0.0,
+            tif: str = "DAY",
+            asset_type: str = "STK",
+            exchange: str = "SMART",
+            session: str = "normal",
+            position_size: float = 0.0,
+            strategy: str = "",
+            entry_condition: str = "",
+            timestamp: str = ""
+    ) -> bool:
+        """
+        action: BUY / SELL / CLOSE
+        order_type: MKT / LMT / STP / STP LMT
+        tif: Time-in-Force: GTC, DAY, etc.
+        """
+        action = action.upper()
+        order_type = order_type.upper()
+        asset_type = asset_type.upper()
+
+        # 자동으로 현재 가격을 가져옴 (지정가 or 조건부 주문인 경우)
+        if order_type in ("LMT", "STP LMT") and limit_price is None:
+            limit_price = self.market.get_market_price(symbol)
+            self.logger.info(f"Limit price not specified, using market price: {limit_price}")
+
+        self.logger.info(
+            f"Signal: {action} {quantity}×{symbol} | Type: {order_type}, Limit: {limit_price}, Stop: {stop_price}")
+
+        return self.execute_position(
+            symbol=symbol,
+            action=action,
+            quantity=quantity,
+            order_type=order_type,
+            limit_price=limit_price,
+            stop_price=stop_price,
+            tif=tif,
+            asset_type=asset_type,
+            exchange=exchange
+        )
+
+
+    def execute_position(
+            self,
+            symbol: str,
+            action: str,
+            quantity: int,
+            order_type: str = "MKT",
+            limit_price: Optional[float] = None,
+            stop_price: Optional[float] = None,
+            tif: str = "GTC",
+            asset_type: str = "STK",
+            exchange: Optional[str] = None
+    ) -> bool:
+        """
+        주문 실행 로직 (롱/숏/청산) 통합 처리
+        """
         try:
-            # Check if market is open
             if not self.trading_hours.is_market_open():
-                self.logger.warning("Cannot execute trade - Market is closed")
+                self.logger.warning("Market is closed")
                 return False
 
-            # Check account balance
-            if not self.order_manager.check_sufficient_funds():
-                self.logger.warning("Insufficient funds for trade")
-                return False
+            # if not self.order_manager.check_sufficient_funds():
+            #     self.logger.warning("Insufficient funds")
+            #     return False
 
-            # Get current price
-            price = self.market.get_market_price(symbol)
-            if not price:
-                self.logger.error("Could not get current price")
-                return False
+            # 지정가나 스탑 주문인데 가격이 없으면 시장가로 대체
+            if order_type in ("LMT", "STP LMT") and limit_price is None:
+                limit_price = self.market.get_market_price(symbol)
+                self.logger.info(f"Defaulted limit price to market price: {limit_price}")
 
-            # Execute order
-            success = self.order_manager.place_buy_order(symbol, 1, price)
+            # 포지션 청산은 매수/매도 방향 반대로
+            if action == "CLOSE":
+                # 포지션 방향을 판단하고 반대 주문 실행 (예: 현재 LONG → SHORT)
+                action = self.order_manager.get_opposite_position(symbol)
+                self.logger.info(f"CLOSE requested, reversing to action: {action}")
+
+            # 주문 실행
+            success = self.order_manager.place_order(
+                symbol=symbol,
+                quantity=quantity,
+                action=action,
+                order_type=order_type,
+                limit_price=limit_price,
+                stop_price=stop_price,
+                tif=tif,
+                asset_type=asset_type,
+                exchange=exchange
+            )
+
+            # 예시로 거래 기록 저장, 이메일 전송 등 추가 가능
             if success:
-                # Update trading summary
-                self.trading_summary['total_trades'] += 1
-                self.trading_summary['entry_price'] = price
-                self.trading_summary['symbol'] = symbol
-                
-                # Take screenshot
-                screenshot_path = self.screenshotter.capture(symbol)
-                
-                # Record transaction
-                self.reporter.record_transaction(
-                    symbol=symbol,
-                    price=price,
-                    quantity=1,
-                    spx_drop=drop_level,
-                    screenshot_path=screenshot_path
-                )
-                return True
-            
-            return False
+                self.logger.info(f"Order executed: {action} {quantity}×{symbol}")
+            else:
+                self.logger.warning(f"Order failed: {action} {quantity}×{symbol}")
 
-        except TradingException as e:
-            self.logger.error(f"Trading error: {str(e)}")
-            return False
+            return success
 
-    def run(self):
-        """Main trading loop"""
-        try:
-            # Get trading mode
-            print("\nSelect trading mode:")
-            print("1. Live Trading (Port 4001)")
-            print("2. Paper Trading (Port 4002)")
-            # print("1. Live Trading (Port 7496)")
-            # print("2. Paper Trading (Port 7497)")
-            
-            while True:
-                mode = input("Enter choice (1 or 2): ")
-                if mode in ['1', '2']:
-                    break
-                print("Invalid choice. Please enter 1 or 2.")
-            
-            port = 4001 if mode == "1" else 4002
-            # port = 7496 if mode == "1" else 7497
-            self.trading_summary['trading_mode'] = 'Live' if mode == '1' else 'Paper'
-            
-            # Connect to server
-            if not self.connect_to_server(port):
-                self.logger.error("Failed to connect to IBKR")
-                return
-            
-            # Get symbol
-            symbol = input("\nEnter stock symbol (e.g., MSFT): ").upper()
-            self.trading_summary['symbol'] = symbol
-            
-            # Main monitoring loop
-            while True:
-                try:
-                    # Check if market is open
-                    if not self.trading_hours.is_market_open():
-                        # Send report when market closes
-                        self.send_trading_report()
-                        if not self.handle_market_closed():
-                            print("\nExiting application due to closed market.")
-                            break
-                        self.market.sleep(min(self.trading_hours.time_until_market_open(), 3600))
-                        continue
-
-                    # Monitor SPX
-                    spx_drop = self.monitor_spx()
-                    
-                    # Check trading conditions
-                    if spx_drop >= 40:
-                        print(f"SPX dropped {spx_drop:.2f}%. Executing 40% strategy...")
-                        if self.execute_trade(symbol, 40):
-                            self.logger.info("Successfully executed 40% drop strategy")
-                        break
-                    elif spx_drop >= 30:
-                        print(f"SPX dropped {spx_drop:.2f}%. Executing 30% strategy...")
-                        if self.execute_trade(symbol, 30):
-                            self.logger.info("Successfully executed 30% drop strategy")
-                        break
-                    elif spx_drop >= 20:
-                        print(f"SPX dropped {spx_drop:.2f}%. Executing 20% strategy...")
-                        if self.execute_trade(symbol, 20):
-                            self.logger.info("Successfully executed 20% drop strategy")
-                        break
-                    elif spx_drop >= 10:
-                        print(f"SPX dropped {spx_drop:.2f}%. Executing 10% strategy...")
-                        if self.execute_trade(symbol, 10):
-                            self.logger.info("Successfully executed 10% drop strategy")
-                        break
-                    
-                    # Calculate time until market close
-                    time_to_close = self.trading_hours.time_until_market_close()
-                    if time_to_close <= 0:
-                        print("\nMarket is closing. Ending monitoring session.")
-                        # Send final report
-                        self.send_trading_report()
-                        break
-
-                    # Wait before next check
-                    wait_time = min(60, time_to_close)  # Wait 1 minute or until market close
-                    self.market.sleep(wait_time)
-                    
-                    # Ask to continue
-                    if input("\nContinue monitoring? (y/n): ").lower() != 'y':
-                        # Send report before exiting
-                        self.send_trading_report()
-                        break
-                
-                except KeyboardInterrupt:
-                    print("\nMonitoring interrupted by user")
-                    # Send report on manual exit
-                    self.send_trading_report()
-                    break
-                    
         except Exception as e:
-            self.logger.error(f"Application error: {str(e)}")
-        
-        finally:
-            self.market.disconnect()
-            self.reporter.generate_report()
+            self.logger.error(f"Execution failed: {str(e)}")
+            return False
 
 
+    def send_report(self) -> None:
+        try:
+            paths = self.reporter.generate_report()
+            recv = os.getenv("TRADING_REPORT_EMAIL")
+            if recv:
+                summary = {
+                    "open_positions": self.positions,
+                    "timestamp": self.trading_hours.current_timestamp()
+                }
+                self.emailer.send_report(recv, paths, summary)
+            else:
+                self.logger.info("No report email configured - skipping.")
+        except Exception as e:
+            self.logger.error(f"Report error: {e}")
+
+
+# 모듈 레벨로 핸들러만 노출
 trading_app = TradingApp()
-
-
-def main():
-    trading_app = TradingApp()
-    trading_app.run()
-
-
-if __name__ == "__main__":
-    main()

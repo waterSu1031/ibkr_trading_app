@@ -1,11 +1,12 @@
 from datetime import datetime, time, timedelta
 import pytz
 
+
 class TradingHours:
     def __init__(self):
         self.et_timezone = pytz.timezone('US/Eastern')
-        self.market_open = time(9, 30)  # 9:30 AM ET
-        self.market_close = time(16, 0)  # 4:00 PM ET
+        self.market_open = time(00, 30)  # 9:30 AM ET
+        self.market_close = time(23, 0)  # 4:00 PM ET
 
     def is_trading_day(self) -> bool:
         """Check if today is a trading day (Monday-Friday)"""

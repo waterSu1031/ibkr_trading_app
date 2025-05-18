@@ -1,105 +1,58 @@
 from typing import Optional
-from ib_insync import IB, Stock, Index
+from ib_insync import IB, Stock, Future, Index, Contract
 from src.exceptions.trading_exceptions import MarketDataException
-import time
-import logging
+import time, logging
 
 logger = logging.getLogger(__name__)
 
 class MarketData:
-    def __init__(self):
-        self.ib = IB()
-        self.connection_timeout = 30  # 30 seconds timeout
-        self.retry_interval = 5      # 5 seconds between retries
-        self.max_retries = 3        # Maximum number of connection attempts
+    def __init__(self, ib:IB):
+        self.ib = ib
 
-    def connect(self, port: int, host: str = "127.0.0.1", client_id: int = 1) -> bool:
-        """Connect to IBKR with retries"""
-        for attempt in range(self.max_retries):
-            try:
-                # Try to disconnect if there's an existing connection
-                if self.ib.isConnected():
-                    self.ib.disconnect()
-                    time.sleep(1)  # Wait a bit before reconnecting
-                
-                # Attempt connection with timeout
-                self.ib.connect(
-                    host=host,
-                    port=port,
-                    clientId=client_id,
-                    timeout=self.connection_timeout
-                )
-                
-                # Wait for connection to stabilize
-                time.sleep(1)
-                
-                # Enable delayed market data
-                self.ib.reqMarketDataType(3)  # 3 = Delayed data
-                logger.info("Enabled delayed market data")
-                
-                # Verify connection
-                if self.ib.isConnected():
-                    print(f"Successfully connected to IBKR on port {port}")
-                    return True
-                    
-            except Exception as e:
-                print(f"Connection attempt {attempt + 1} failed: {str(e)}")
-                if attempt < self.max_retries - 1:  # Don't sleep on last attempt
-                    print(f"Retrying in {self.retry_interval} seconds...")
-                    time.sleep(self.retry_interval)
-                    
-        raise MarketDataException("Failed to connect after all retry attempts")
 
-    def disconnect(self):
-        """Disconnect from IBKR"""
-        if self.ib.isConnected():
-            self.ib.disconnect()
-
-    def is_connected(self) -> bool:
-        """Check if connected to IBKR"""
-        return self.ib.isConnected()
-
-    def get_market_price(self, symbol: str) -> Optional[float]:
-        """Get current market price for a symbol"""
+    def get_market_price(self, symbol: str, asset_type: str = "STK", exchange: Optional[str] = None) -> Optional[float]:
+        """
+        범용 마켓 가격 조회 함수 (주식, 선물, 지수 등)
+        asset_type: STK (주식), FUT (선물), IND (지수)
+        exchange: 생략 시 기본 거래소로 설정
+        """
         try:
             if not self.is_connected():
                 raise MarketDataException("Not connected to IBKR")
 
-            # Create contract based on symbol type
-            if symbol == "SPX":
-                contract = Index('SPX', 'CBOE', 'USD')
-                logger.info("Created SPX index contract")
+            # 1. 계약 생성
+            contract: Contract
+            if asset_type == "STK":
+                contract = Stock(symbol, exchange or "SMART", "USD")
+            elif asset_type == "FUT":
+                contract = Future(symbol, exchange or "GLOBEX", "USD")
+            elif asset_type == "IND":
+                contract = Index(symbol, exchange or "CBOE", "USD")
             else:
-                contract = Stock(symbol, "SMART", "USD")
-                logger.info(f"Created stock contract for {symbol}")
+                raise MarketDataException(f"Unsupported asset type: {asset_type}")
+            logger.info(f"Created contract for {symbol} ({asset_type})")
 
+            # 2. 자격 확인
             self.ib.qualifyContracts(contract)
-            
-            # Request market data with timeout
+
+            # 3. 마켓 데이터 요청
             ticker = self.ib.reqMktData(contract)
-            timeout_time = time.time() + 10  # 10 seconds timeout
-            
+            timeout_time = time.time() + 10  # 최대 10초 대기
+
+            # 4. 가격 조회 시도 (우선순위 방식)
             while time.time() < timeout_time:
-                self.ib.sleep(0.1)  # Small sleep to prevent CPU spinning
-                
-                # For indices, try last price first, then close
-                if symbol == "SPX":
-                    if ticker.last:
-                        logger.info(f"Got last price for SPX: {ticker.last}")
-                        return ticker.last
-                    elif ticker.close:
-                        logger.info(f"Got close price for SPX: {ticker.close}")
-                        return ticker.close
-                # For stocks, try different price types
-                else:
-                    price = (ticker.last or ticker.close or 
-                            ticker.bid or ticker.ask or ticker.high or ticker.low)
-                    if price:
-                        logger.info(f"Got price for {symbol}: {price}")
-                        return price
-            
+                self.ib.sleep(0.1)
+                price = (
+                    ticker.last or ticker.close or
+                    ticker.bid or ticker.ask or
+                    ticker.high or ticker.low
+                )
+                if price:
+                    logger.info(f"Got price for {symbol} ({asset_type}): {price}")
+                    return price
+
             raise MarketDataException(f"Timeout waiting for market data for {symbol}")
-            
+
         except Exception as e:
             raise MarketDataException(f"Failed to get market price: {str(e)}")
 
