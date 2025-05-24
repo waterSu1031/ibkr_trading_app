@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IBKR Trading Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 32px; }
+        h1, h2 { color: #333; }
+        table { border-collapse: collapse; margin-bottom: 32px; width: 100%; }
+        th, td { border: 1px solid #bbb; padding: 6px 10px; text-align: center; }
+        th { background-color: #eee; }
+        .pos { color: green; }
+        .neg { color: red; }
+        .gray { color: #888; }
+        .section { margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <h1>IBKR 자동매매 대시보드</h1>
+
+    <!-- 계좌 요약 -->
+    <div class="section">
+        <h2>Account Summary</h2>
+        <table>
+            <tr>
+                <th>Account</th><th>Tag</th><th>Value</th><th>Currency</th><th>Updated At</th>
+            </tr>
+            {% for acc in accounts %}
+            <tr>
+                <td>{{ acc.account }}</td>
+                <td>{{ acc.tag }}</td>
+                <td>{{ acc.value }}</td>
+                <td>{{ acc.currency }}</td>
+                <td class="gray">{{ acc.updated_at }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 보유 포지션 -->
+    <div class="section">
+        <h2>Positions</h2>
+        <table>
+            <tr>
+                <th>Account</th><th>Symbol</th><th>Asset Type</th><th>Exchange</th>
+                <th>Qty</th><th>Avg Price</th><th>Updated At</th>
+            </tr>
+            {% for p in positions %}
+            <tr>
+                <td>{{ p.account }}</td>
+                <td>{{ p.symbol }}</td>
+                <td>{{ p.asset_type }}</td>
+                <td>{{ p.exchange }}</td>
+                <td>{{ p.quantity }}</td>
+                <td>{{ p.avg_price }}</td>
+                <td class="gray">{{ p.updated_at }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 미체결 주문 -->
+    <div class="section">
+        <h2>Open Orders</h2>
+        <table>
+            <tr>
+                <th>Order ID</th><th>Account</th><th>Symbol</th><th>Action</th>
+                <th>Qty</th><th>Order Type</th><th>Price</th><th>Status</th><th>Created At</th>
+            </tr>
+            {% for o in orders %}
+            <tr>
+                <td>{{ o.order_id }}</td>
+                <td>{{ o.account }}</td>
+                <td>{{ o.symbol }}</td>
+                <td>{{ o.action }}</td>
+                <td>{{ o.quantity }}</td>
+                <td>{{ o.order_type }}</td>
+                <td>{{ o.limit_price or o.aux_price or '' }}</td>
+                <td>{{ o.status }}</td>
+                <td class="gray">{{ o.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 최근 체결 내역 -->
+    <div class="section">
+        <h2>Recent Trades</h2>
+        <table>
+            <tr>
+                <th>Exec ID</th><th>Order ID</th><th>Account</th><th>Symbol</th>
+                <th>Side</th><th>Qty</th><th>Price</th><th>Filled At</th><th>Exchange</th>
+            </tr>
+            {% for t in trades %}
+            <tr>
+                <td>{{ t.exec_id }}</td>
+                <td>{{ t.order_id }}</td>
+                <td>{{ t.account }}</td>
+                <td>{{ t.symbol }}</td>
+                <td>{{ t.side }}</td>
+                <td>{{ t.quantity }}</td>
+                <td>{{ t.price }}</td>
+                <td class="gray">{{ t.filled_at }}</td>
+                <td>{{ t.exchange }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</body>
+</html>

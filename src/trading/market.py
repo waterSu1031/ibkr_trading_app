@@ -5,6 +5,7 @@ import time, logging
 
 logger = logging.getLogger(__name__)
 
+
 class MarketData:
     def __init__(self, ib:IB):
         self.ib = ib

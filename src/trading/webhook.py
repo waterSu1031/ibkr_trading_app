@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Request
+
 from src.trading_app import trading_app  # 실제 경로에 맞게 수정
+from fastapi import APIRouter, Request
 
 router = APIRouter()
+
 
 @router.post("/webhook")
 async def webhook(req: Request):
@@ -52,6 +54,7 @@ async def webhook(req: Request):
     )
 
     return {"status": "received", "symbol": symbol, "action": action}
+
 
 @router.get("/testget")
 async def test_get(request: Request):

@@ -15,6 +15,8 @@ from src.exceptions.trading_exceptions import TradingException
 from src.exceptions.trading_exceptions import MarketDataException
 
 logger = logging.getLogger(__name__)
+
+
 class TradingApp:
     def __init__(self):
         self.ib = IB()
@@ -32,7 +34,7 @@ class TradingApp:
         # positions: symbol → {'side':'LONG'|'SHORT', 'quantity':int, 'entry_price':float}
         self.positions: Dict[str, Dict] = {}
 
-    def connect(self, port: int, host: str = "127.0.0.1", client_id: int = 1) -> bool:
+    def connect(self, port: int, host: str = "127.0.0.1", client_id: int = 0) -> bool:
         """Connect to IBKR with retries"""
         for attempt in range(self.max_retries):
             try:
