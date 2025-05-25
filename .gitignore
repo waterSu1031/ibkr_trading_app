@@ -29,12 +29,12 @@ env/
 # Trading Records
 # trading_records/screenshots/*
 # trading_records/reports/*
-!trading_records/screenshots/.gitkeep
-!trading_records/reports/.gitkeep
+!storage/trading_records/screenshots/.gitkeep
+!storage/trading_records/reports/.gitkeep
 
 # Logs
-logs/*
-!logs/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
 
 # IDE
 .idea/

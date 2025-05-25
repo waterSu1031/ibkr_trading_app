@@ -2,7 +2,7 @@
 
 import requests
 from fastapi.testclient import TestClient
-from src.web_app import web_app
+from src.web_app import app
 
 client = TestClient(web_app)
 

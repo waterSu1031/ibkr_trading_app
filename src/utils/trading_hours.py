@@ -9,7 +9,7 @@ class TradingHours:
         self.market_close = time(23, 0)  # 4:00 PM ET
 
     def is_trading_day(self) -> bool:
-        """Check if today is a trading day (Monday-Friday)"""
+        """Check if today is a trading_app day (Monday-Friday)"""
         et_now = datetime.now(self.et_timezone)
         return et_now.weekday() < 5  # 0-4 represents Monday-Friday
 
@@ -34,7 +34,7 @@ class TradingHours:
             market_open = self.et_timezone.localize(market_open)
             return int((market_open - et_now).total_seconds())
         else:
-            # Market opens next trading day
+            # Market opens next trading_app day
             next_day = et_now + timedelta(days=1)
             while next_day.weekday() >= 5:  # Skip weekends
                 next_day += timedelta(days=1)

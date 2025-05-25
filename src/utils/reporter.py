@@ -11,7 +11,7 @@ class Reporter:
 
     def record_transaction(self, symbol: str, price: float, quantity: int, 
                          spx_drop: float, screenshot_path: Optional[Path] = None) -> None:
-        """Record a trading transaction"""
+        """Record a trading_app transaction"""
         transaction = {
             'date': datetime.now(),
             'symbol': symbol,

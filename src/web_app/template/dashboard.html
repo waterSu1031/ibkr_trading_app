@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trading Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+        table { width: 100%; margin-bottom: 30px; border-collapse: collapse; }
+        th, td { padding: 8px 12px; border: 1px solid #ccc; text-align: left; }
+        h2 { margin-top: 40px; }
+        #account-panel div { margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+    <h1>📈 Trading Dashboard</h1>
+
+    <div id="account-panel">
+        <h2>Account Summary</h2>
+        <!-- 계좌 요약 데이터가 실시간 추가됨 -->
+    </div>
+
+    <h2>Active Orders</h2>
+    <table>
+        <thead>
+            <tr><th>Order ID</th><th>Symbol</th><th>Status</th></tr>
+        </thead>
+        <tbody id="orders-body">
+            <!-- 주문 실시간 표시 -->
+        </tbody>
+    </table>
+
+    <h2>Recent Trades</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Exec ID</th><th>Symbol</th><th>Side</th>
+                <th>Price</th><th>Qty</th><th>Time</th>
+            </tr>
+        </thead>
+        <tbody id="trades-body">
+            <!-- 체결 실시간 표시 -->
+        </tbody>
+    </table>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -151,12 +151,12 @@ pytest
 
 1. Build image:
 ```bash
-docker build -t ibkr-trading-app .
+docker build -t ibkr-trading_app-app .
 ```
 
 2. Run container:
 ```bash
-docker run -d ibkr-trading-app
+docker run -d ibkr-trading_app-app
 ```
 
 ### Kubernetes Deployment
@@ -181,8 +181,8 @@ kubectl apply -f kubernetes/deployment.yaml
 
 2. Monitor deployment:
 ```bash
-kubectl get pods -n trading
-kubectl logs -f deployment/ibkr-trading-app -n trading
+kubectl get pods -n trading_app
+kubectl logs -f deployment/ibkr-trading_app-app -n trading_app
 ```
 
 ## Project Structure

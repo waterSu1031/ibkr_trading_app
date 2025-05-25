@@ -1,37 +1,37 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ibkr-trading-app
-  namespace: trading
+  name: ibkr-trading_app-app
+  namespace: trading_app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ibkr-trading-app
+      app: ibkr-trading_app-app
   template:
     metadata:
       labels:
-        app: ibkr-trading-app
+        app: ibkr-trading_app-app
     spec:
       containers:
-      - name: ibkr-trading-app
+      - name: ibkr-trading_app-app
         image: ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
         imagePullPolicy: Always
         env:
         - name: TRADING_MODEa
           valueFrom:
             configMapKeyRef:
-              name: trading-config
+              name: trading_app-config
               key: trading_mode
         volumeMounts:
-        - name: trading-data
+        - name: trading_app-data
           mountPath: /app/trading_records
         - name: logs
           mountPath: /app/logs
       volumes:
-      - name: trading-data
+      - name: trading_app-data
         persistentVolumeClaim:
-          claimName: trading-data-pvc
+          claimName: trading_app-data-pvc
       - name: logs
         persistentVolumeClaim:
           claimName: logs-pvc
@@ -39,16 +39,16 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: trading-config
-  namespace: trading
+  name: trading_app-config
+  namespace: trading_app
 data:
-  trading_mode: "paper"  # Change to "live" for live trading
+  trading_mode: "paper"  # Change to "live" for live trading_app
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: trading-data-pvc
-  namespace: trading
+  name: trading_app-data-pvc
+  namespace: trading_app
 spec:
   accessModes:
     - ReadWriteOnce
@@ -60,7 +60,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: logs-pvc
-  namespace: trading
+  namespace: trading_app
 spec:
   accessModes:
     - ReadWriteOnce
@@ -71,11 +71,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ibkr-trading-app
-  namespace: trading
+  name: ibkr-trading_app-app
+  namespace: trading_app
 spec:
   selector:
-    app: ibkr-trading-app
+    app: ibkr-trading_app-app
   ports:
     - protocol: TCP
       port: 80

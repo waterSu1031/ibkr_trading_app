@@ -21,3 +21,8 @@ def upsert_account_value(db: Session, data: dict):
 
 def get_account_summary(db: Session, account: str):
     return db.query(Account).filter(Account.account == account).all()
+
+
+# ✅ 추가된 함수
+def get_all_accounts(db: Session):
+    return db.query(Account).all()

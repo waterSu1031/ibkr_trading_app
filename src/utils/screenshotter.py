@@ -10,7 +10,7 @@ class Screenshotter:
 
     def capture(self, symbol: str) -> Optional[Path]:
         """
-        Capture screenshot of trading activity
+        Capture screenshot of trading_app activity
         Returns the path to the saved screenshot
         """
         try:

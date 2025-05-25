@@ -1,7 +1,7 @@
 """Trading application exceptions"""
 
 class TradingException(Exception):
-    """Base exception for trading application"""
+    """Base exception for trading_app application"""
     pass
 
 class MarketDataException(TradingException):
@@ -25,7 +25,7 @@ class ReportingException(TradingException):
     pass
 
 class InsufficientFundsException(TradingException):
-    """Exception raised when there are insufficient funds for trading"""
+    """Exception raised when there are insufficient funds for trading_app"""
     pass
 
 class InvalidSymbolException(TradingException):

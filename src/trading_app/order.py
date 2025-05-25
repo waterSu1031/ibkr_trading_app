@@ -26,7 +26,7 @@ class OrderManager:
             raise OrderException(f"Failed to check funds: {str(e)}")
 
     def get_available_funds(self) -> Optional[float]:
-        """Get available funds for trading"""
+        """Get available funds for trading_app"""
         try:
             # Explicitly type the account_summary
             account_summary: List[AccountValue] = self.ib.reqAccountSummary() or []

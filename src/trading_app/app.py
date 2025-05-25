@@ -4,13 +4,13 @@ import time
 import logging
 from ib_insync import IB
 
-from .trading.market import MarketData
-from .trading.order import OrderManager
-from .utils.logger import setup_logger
-from .utils.reporter import Reporter
-from .utils.screenshotter import Screenshotter
-from .utils.trading_hours import TradingHours
-from .utils.email_sender import EmailSender
+from src.trading_app.market import MarketData
+from src.trading_app.order import OrderManager
+from src.utils.logger import setup_logger
+from src.utils.reporter import Reporter
+from src.utils.screenshotter import Screenshotter
+from src.utils.trading_hours import TradingHours
+from src.utils.email_sender import EmailSender
 from src.exceptions.trading_exceptions import TradingException
 from src.exceptions.trading_exceptions import MarketDataException
 

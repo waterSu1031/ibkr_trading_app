@@ -1,5 +1,5 @@
 
-from src.trading_app import trading_app  # 실제 경로에 맞게 수정
+from src.trading_app.app import trading_app  # 실제 경로에 맞게 수정
 from fastapi import APIRouter, Request
 
 router = APIRouter()
