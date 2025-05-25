@@ -10,13 +10,8 @@ class TradingConfig:
     PAPER_PORT: int = 4002
     CLIENT_ID: int = 1
 
-    # Trading parameters
-    RESERVE_PERCENTAGE: float = 50.0  # Keep 50% of funds in reserve
-    SPX_DROP_LEVELS: List[int] = (10, 20, 30, 40)  # type: ignore
-    PRICE_CHECK_THRESHOLD: float = 10.0  # 10% threshold for price reasonability
-
     # File paths
-    BASE_DIR: Path = Path(__file__).parent.parent
+    BASE_DIR: Path = Path(__file__).parent.parent / "storage"
     LOGS_DIR: Path = BASE_DIR / "logs"
     SCREENSHOTS_DIR: Path = BASE_DIR / "trading_records" / "screenshots"
     REPORTS_DIR: Path = BASE_DIR / "trading_records" / "reports"
@@ -26,5 +21,3 @@ class TradingConfig:
         self.LOGS_DIR.mkdir(parents=True, exist_ok=True)
         self.SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
         self.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-        # Convert tuple to list for SPX_DROP_LEVELS
-        self.SPX_DROP_LEVELS = list(self.SPX_DROP_LEVELS)

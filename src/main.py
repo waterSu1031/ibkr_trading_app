@@ -15,7 +15,7 @@ def run_trading():
 
 def run_dashboard():
     # 웹 대시보드 실행
-    uvicorn.run(web_app, host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(web_app, host="127.0.0.1", port=8000, reload=False)
 
 
 # def run_report_loop():
@@ -33,7 +33,7 @@ def main():
     # 트레이딩 앱 실행
     Thread(target=run_trading, daemon=True).start()
 
-    # 웹 대시보드 실행
+    # 대시보드 웹 실행
     Thread(target=run_dashboard, daemon=True).start()
 
     # # 주기적 리포트 전송
