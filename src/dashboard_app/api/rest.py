@@ -8,7 +8,7 @@ from src.database.crud.position import get_all_positions
 from src.database.session import SessionLocal
 
 router = APIRouter()
-templates = Jinja2Templates(directory="web_app/templates")
+templates = Jinja2Templates(directory="dashboard_app/templates")
 
 
 @router.get("/dashboard", response_class=HTMLResponse)

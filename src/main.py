@@ -3,9 +3,9 @@ import uvicorn
 import time
 
 from src.trading_app.app import trading_app
-from src.web_app.app import web_app
-# from src.web_app.core.ib_sync import start_sync_loop
-# from src.web_app.core.ib_connector import IBConnector
+from src.dashboard_app.app import web_app
+# from src.dashboard_app.core.ib_sync import start_sync_loop
+# from src.dashboard_app.core.ib_connector import IBConnector
 
 
 def run_trading():
@@ -34,7 +34,7 @@ def main():
     Thread(target=run_trading, daemon=True).start()
 
     # 대시보드 웹 실행
-    Thread(target=run_dashboard, daemon=True).start()
+    # Thread(target=run_dashboard, daemon=True).start()
 
     # # 주기적 리포트 전송
     # try:

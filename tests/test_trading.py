@@ -2,9 +2,9 @@
 
 import requests
 from fastapi.testclient import TestClient
-from src.web_app import app
+from src.dashboard_app.app import web_app as dashboard_app
 
-client = TestClient(web_app)
+client = TestClient(dashboard_app)
 
 
 def test_webhook_stock():

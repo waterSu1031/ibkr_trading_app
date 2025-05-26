@@ -5,10 +5,19 @@ from typing import List
 @dataclass
 class TradingConfig:
     # Connection settings
-    HOST: str = "127.0.0.1"
-    LIVE_PORT: int = 4001
-    PAPER_PORT: int = 4002
-    CLIENT_ID: int = 1
+    def get_config(self):
+        return {
+            "DASHBOARD": {
+                "host": "127.0.0.1",
+                "port": 4002,
+                "clientId": 1
+            },
+            "TRADING": {
+                "host": "127.0.0.1",
+                "port": 4001,
+                "clientId": 2
+            }
+        }
 
     # File paths
     BASE_DIR: Path = Path(__file__).parent.parent / "storage"
@@ -17,7 +26,7 @@ class TradingConfig:
     REPORTS_DIR: Path = BASE_DIR / "trading_records" / "reports"
 
     # Ensure directories exist
-    def __post_init__(self):
+    def make_storage(self):
         self.LOGS_DIR.mkdir(parents=True, exist_ok=True)
         self.SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
         self.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
