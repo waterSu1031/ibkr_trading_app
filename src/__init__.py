@@ -5,7 +5,7 @@ from .trading_app.order import OrderManager
 from .utils.logger import setup_logger
 from .utils.reporter import Reporter
 from .utils.screenshotter import Screenshotter
-from .exceptions.trading_exceptions import (
+from src.shared.exceptions import (
     TradingException,
     MarketDataException,
     OrderException,

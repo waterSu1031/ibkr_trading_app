@@ -11,8 +11,7 @@ from src.utils.reporter import Reporter
 from src.utils.screenshotter import Screenshotter
 from src.utils.trading_hours import TradingHours
 from src.utils.email_sender import EmailSender
-from src.exceptions.trading_exceptions import TradingException
-from src.exceptions.trading_exceptions import MarketDataException
+from src.shared.exceptions import MarketDataException
 
 logger = logging.getLogger(__name__)
 
@@ -80,17 +79,6 @@ class TradingApp:
         """Check if connected to IBKR"""
         return self.ib.isConnected()
 
-    # def connect(self, port: int) -> bool:
-    #     try:
-    #         ok = self.market.connect(port)
-    #         ok = self.ib.connect(port, clientId=123)
-    #         self.logger.info(f"Connected to IBKR on port {port}" if ok else f"Connection failed on port {port}")
-    #         return ok
-    #     except Exception as e:
-    #         self.logger.error(f"IBKR connect error: {e}")
-    #         return False
-
-
     def handle_signal(
             self,
             symbol: str,
@@ -138,7 +126,6 @@ class TradingApp:
             asset_type=asset_type,
             exchange=exchange
         )
-
 
     def execute_position(
             self,
@@ -200,7 +187,6 @@ class TradingApp:
             self.logger.error(f"Execution failed: {str(e)}")
             return False
 
-
     def send_report(self) -> None:
         try:
             paths = self.reporter.generate_report()
@@ -219,3 +205,7 @@ class TradingApp:
 
 # 모듈 레벨로 핸들러만 노출
 trading_app = TradingApp()
+
+
+if __name__ == "__main__":
+    trading_app.connect(port=4002)

@@ -1,6 +1,6 @@
 from typing import Optional
 from ib_insync import IB, Stock, Future, Index, Contract
-from src.exceptions.trading_exceptions import MarketDataException
+from src.shared.exceptions import MarketDataException
 import time, logging
 
 logger = logging.getLogger(__name__)

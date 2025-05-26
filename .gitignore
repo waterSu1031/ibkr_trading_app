@@ -1,5 +1,6 @@
 # Python
-.env
+.env.dev
+.env.prod
 __pycache__/
 *.py[cod]
 *$py.class

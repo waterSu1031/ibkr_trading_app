@@ -1,6 +1,6 @@
 from typing import Optional, Dict, List
 from ib_insync import IB, Stock, Future, Order, AccountValue
-from src.exceptions.trading_exceptions import OrderException
+from src.shared.exceptions import OrderException
 from src.utils.logger import setup_logger
 
 class OrderManager:
