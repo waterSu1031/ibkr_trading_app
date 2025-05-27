@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from pathlib import Path
 from src.database.crud.order import get_all_orders
 from src.database.crud.trade import get_all_trades
 from src.database.crud.account import get_all_accounts
@@ -8,7 +9,9 @@ from src.database.crud.position import get_all_positions
 from src.database.session import SessionLocal
 
 router = APIRouter()
-templates = Jinja2Templates(directory="dashboard_app/templates")
+
+BASE_DIR = Path(__file__).resolve().parent.parent  # src/
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 @router.get("/dashboard", response_class=HTMLResponse)

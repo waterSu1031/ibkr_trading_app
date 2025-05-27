@@ -16,8 +16,8 @@ def start_sync_loop(ib: IB, interval_sec: int = 5):
                     "account": p.account,
                     "symbol": p.contract.symbol,
                     "quantity": p.position,
-                    "avg_cost": p.avgCost,
-                    "currency": p.contract.currency,
+                    # "avg_price": p.avgCost,
+                    # "currency": p.contract.currency,
                     "updated_at": datetime.utcnow(),
                 })
             db.close()

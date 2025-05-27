@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>📈 Trading Dashboard - Full View</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f2f2f2; }
+        table { width: 100%; margin-bottom: 30px; border-collapse: collapse; }
+        th, td { padding: 6px 10px; border: 1px solid #ccc; text-align: left; font-size: 14px; }
+        h2 { margin-top: 40px; }
+        .panel { background: white; padding: 10px; border: 1px solid #ccc; margin-bottom: 20px; }
+        .panel div { margin: 5px 0; }
+    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+
+<h1>📊 IBKR Trading Dashboard</h1>
+
+<div class="panel" id="account-panel">
+    <h2>Account Summary</h2>
+    <!-- 계좌 요약 데이터가 실시간 추가됨 -->
+</div>
+
+<h2>Active Orders</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Order ID</th><th>Perm ID</th><th>Symbol</th><th>Action</th>
+            <th>Quantity</th><th>Type</th><th>Limit Price</th><th>Aux Price</th>
+            <th>TIF</th><th>Status</th><th>Exchange</th><th>Time</th>
+        </tr>
+    </thead>
+    <tbody id="orders-body">
+        <!-- 주문 실시간 표시 -->
+    </tbody>
+</table>
+
+<h2>Recent Trades</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Exec ID</th><th>Order ID</th><th>Symbol</th><th>Side</th>
+            <th>Shares</th><th>Price</th><th>Exchange</th><th>Realized PnL</th><th>Time</th>
+        </tr>
+    </thead>
+    <tbody id="trades-body">
+        <!-- 체결 실시간 표시 -->
+    </tbody>
+</table>
+
+<h2>Positions</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Symbol</th><th>Quantity</th><th>Avg Cost</th><th>Market Price</th>
+            <th>Unrealized PnL</th><th>Realized PnL</th><th>Account</th><th>Time</th>
+        </tr>
+    </thead>
+    <tbody id="positions-body">
+        <!-- 포지션 실시간 표시 -->
+    </tbody>
+</table>
+
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

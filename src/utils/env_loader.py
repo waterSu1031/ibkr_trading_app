@@ -10,14 +10,14 @@ def load_env_variables():
     env_path = Path(__file__).parent.parent.parent / '.env'
     
     if not env_path.exists():
-        template_path = Path(__file__).parent.parent.parent / '.env.template'
+        template_path = Path(__file__).parent.parent.parent / '.env.templates'
         if template_path.exists():
             logger.warning(
-                f"No .env file found. Please copy .env.template to .env "
+                f"No .env file found. Please copy .env.templates to .env "
                 f"and fill in your values."
             )
         else:
-            logger.error("Neither .env nor .env.template found!")
+            logger.error("Neither .env nor .env.templates found!")
         return False
     
     load_dotenv(env_path)

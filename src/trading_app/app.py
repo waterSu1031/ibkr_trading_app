@@ -11,7 +11,7 @@ from src.utils.reporter import Reporter
 from src.utils.screenshotter import Screenshotter
 from src.utils.trading_hours import TradingHours
 from src.utils.email_sender import EmailSender
-from src.shared.exceptions import MarketDataException
+from src.exceptions import MarketDataException
 
 logger = logging.getLogger(__name__)
 
