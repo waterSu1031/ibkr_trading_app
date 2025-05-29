@@ -1,5 +1,5 @@
 """Utils module initialization"""
-from .logger import setup_logger
+from src.shared.logger import setup_logger
 from .reporter import Reporter
 from .screenshotter import Screenshotter
 

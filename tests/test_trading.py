@@ -2,7 +2,7 @@
 
 import requests
 from fastapi.testclient import TestClient
-from src.dashboard_app.app import web_app as dashboard_app
+from src._dashboard_app.main import web_app as dashboard_app
 
 client = TestClient(dashboard_app)
 

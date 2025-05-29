@@ -104,9 +104,9 @@ class EmailSender:
                     logger.error(f"Error attaching report {file_path}: {str(e)}")
 
     def send_report(self, recipient_email: str, report_paths: List[Path], trading_summary: TradingSummary) -> bool:
-        """Send trading_app report via email with all trading_app records"""
+        """Send _web_app report via email with all _web_app records"""
         if not self.is_configured or not self.sender_email or not self.sender_password:
-            logger.warning("Email sender not configured. Skipping email report.")
+            logger.warning("Email service not configured. Skipping email report.")
             return False
 
         try:
@@ -116,11 +116,11 @@ class EmailSender:
             msg['To'] = recipient_email
             msg['Subject'] = f"Trading Report - {datetime.now().strftime('%Y-%m-%d')}"
 
-            # Create email body with trading_app summary
+            # Create email body with _web_app summary
             body = self._create_email_body(trading_summary)
             msg.attach(MIMEText(body, 'html'))
 
-            # Attach all trading_app records
+            # Attach all _web_app records
             self._attach_trading_records(msg)
 
             # Send email
@@ -139,7 +139,7 @@ class EmailSender:
             return False
 
     def _create_email_body(self, trading_summary: TradingSummary) -> str:
-        """Create HTML email body with trading_app summary"""
+        """Create HTML email body with _web_app summary"""
         return f"""
         <html>
         <body>

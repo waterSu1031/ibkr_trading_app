@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  dashboard:
+    build:
+      context: ./_dashboard_app
+      dockerfile: ../src/_trading_app/Dockerfile
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+
+  trading:
+    build:
+      context: ./_trading_app
+      dockerfile: ../src/_trading_app/Dockerfile
+    env_file:
+      - .env.dev
+    depends_on:
+      - redis
+    ports:
+      - "8001:8001"

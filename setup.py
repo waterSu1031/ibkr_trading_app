@@ -13,7 +13,7 @@ setup(
         "logging>=0.5.1.2",
     ],
     author="etcheah",
-    description="Automated trading_app application for Interactive Brokers",
+    description="Automated _web_app application for Interactive Brokers",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/ceteongvanness/ibkr-trading-app",

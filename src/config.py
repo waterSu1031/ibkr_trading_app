@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 # .env 파일 로딩
-load_dotenv(dotenv_path=os.getenv("ENV_FILE", ".env.dev"))
+load_dotenv(dotenv_path=os.getenv("ENV_FILE", ".env"))
 
 
 @dataclass
@@ -34,11 +34,6 @@ class TradingConfig:
     EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "")
     SMTP_SERVER: str = os.getenv("SMTP_SERVER", "")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", 587))
-
-    def __post_init__(self):
-
-        for d in [self.LOGS_DIR, self.REPORTS_DIR, self.SCREENSHOTS_DIR]:
-            d.mkdir(parents=True, exist_ok=True)
 
 
 # 인스턴스 생성

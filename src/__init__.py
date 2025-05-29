@@ -1,11 +1,11 @@
 """Main package initialization"""
 
-from .trading_app.market import MarketData
-from .trading_app.order import OrderManager
-from .utils.logger import setup_logger
+from src._trading_app.core.market import MarketData
+from src._trading_app.core.order import OrderManager
+from src.shared.logger import setup_logger
 from .utils.reporter import Reporter
 from .utils.screenshotter import Screenshotter
-from src.exceptions import (
+from src.shared.exceptions import (
     TradingException,
     MarketDataException,
     OrderException,

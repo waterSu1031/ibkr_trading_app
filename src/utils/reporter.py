@@ -7,11 +7,11 @@ class Reporter:
     def __init__(self):
         self.transactions = []
         self.reports_dir = Path("trading_records/reports")
-        self.reports_dir.mkdir(parents=True, exist_ok=True)
+        # self.reports_dir.mkdir(parents=True, exist_ok=True)
 
     def record_transaction(self, symbol: str, price: float, quantity: int, 
                          spx_drop: float, screenshot_path: Optional[Path] = None) -> None:
-        """Record a trading_app transaction"""
+        """Record a _web_app transaction"""
         transaction = {
             'date': datetime.now(),
             'symbol': symbol,
