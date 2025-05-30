@@ -23,6 +23,7 @@ web_app.include_router(websocket.router)
 
 web_app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @web_app.get("/")
 def root():
     return {"status": "_dashboard_app running"}

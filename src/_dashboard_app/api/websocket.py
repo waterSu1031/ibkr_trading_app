@@ -1,24 +1,29 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from src._dashboard_app.api.websocket import active_connections
+
+from src.database.redis.redis_core import redis_client
+from uvicorn.loops import asyncio
+import json
+
 
 router = APIRouter()
 
-# 전역 WebSocket 브로드캐스트 대상들 (예: 웹앱에서 관리됨)
-active_ws_connections = {
+# 전역 WebSocket broadcast 대상들
+ws_subscribes = {
     "trades": [],
     "orders": [],
     "accounts": [],
     "positions": [],
-    "signals": [],  # 트레이딩앱 대상
+    "signals": [],
 }
 
 
-async def broadcast_from_redis():
-    pubsub = redis_conn.pubsub()
+async def broadcast_from_redis(active_connections=None):
+    pubsub = redis_client.pubsub()
     await pubsub.subscribe("orders", "trades", "accounts")
     while True:
         message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
         if message:
+            
             data = json.loads(message["data"])
             for ws in active_connections:
                 await ws.send_json(data)
@@ -31,6 +36,7 @@ ws_clients = {
     "trades": [],
     "accounts": []
 }
+
 
 @router.websocket("/ws/orders")
 async def websocket_orders(websocket: WebSocket):

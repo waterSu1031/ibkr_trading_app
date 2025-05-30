@@ -13,7 +13,6 @@ all_channel_list = list(all_callback_map.keys())
 
 # 🟢 Redis Publish 함수들
 def redis_publish_event(event_type: str, data: dict):
-    # Redis 채널에 메시지를 발행하는 함수
     # :param event_type: 이벤트 유형 (order, trade, account, position, submit, ticker)
     # :param data: 전송할 데이터 (dict 형식)
     channel = f"{event_type}"
@@ -21,9 +20,9 @@ def redis_publish_event(event_type: str, data: dict):
     redis_client.publish(channel, message)
     print(f"[Redis Publish] → {channel}: {message}")
 
+
 # 🟢 Redis Subscribe 함수들
 def redis_subscribe_all(channel: list, callback_map: dict):
-    # Redis 구독 함수
     # :param channel: Redis 채널 이름 (예: 'order_channel')
     # :param callback: 메시지를 처리할 함수
     pubsub = redis_client.pubsub()

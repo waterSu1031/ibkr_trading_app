@@ -15,7 +15,6 @@ async def webhook(req: Request):
     data = await req.json()
     print(f"📩 Webhook received: {data}")
 
-
     # Redis 채널로 publish
     redis_client.publish('submit_order', json.dumps(data))
 
