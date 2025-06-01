@@ -1,22 +1,24 @@
 
 from fastapi import APIRouter, Request
+from starlette.responses import JSONResponse
 from src.database.redis.redis_core import redis_client
+
 import redis
 import json
 
 router = APIRouter()
 
-# Redis 클라이언트 초기화 (로컬/운영 구분은 나중에 환경변수로 분리 가능)
-# redis_client = redis.Redis(host='localhost', port=6379, db=0)
-
-
 @router.post("/webhook")
 async def webhook(req: Request):
-    data = await req.json()
-    print(f"📩 Webhook received: {data}")
+    try:
+        data = await req.json()
+        print(f"📩 Webhook received: {data}")
 
-    # Redis 채널로 publish
-    redis_client.publish('submit_order', json.dumps(data))
+        # Redis 채널로 publish
+        redis_client.publish('submit_order', json.dumps(data))
+
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"error": "Invalid JSON", "detail": str(e)})
 
     # # 필수 파라미터
     # symbol = data["symbol"]

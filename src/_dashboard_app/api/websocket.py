@@ -1,6 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from src.database.redis.redis_core import redis_client
+# from src.database.redis.redis_core import redis_client
 from uvicorn.loops import asyncio
 import json
 
@@ -8,34 +8,28 @@ import json
 router = APIRouter()
 
 # 전역 WebSocket broadcast 대상들
-ws_subscribes = {
-    "trades": [],
-    "orders": [],
-    "accounts": [],
-    "positions": [],
-    "signals": [],
-}
-
-
-async def broadcast_from_redis(active_connections=None):
-    pubsub = redis_client.pubsub()
-    await pubsub.subscribe("orders", "trades", "accounts")
-    while True:
-        message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-        if message:
-            
-            data = json.loads(message["data"])
-            for ws in active_connections:
-                await ws.send_json(data)
-        await asyncio.sleep(0.1)
-
-
+# ws_subscribes = {
+#     "trades": [],
+#     "orders": [],
+#     "accounts": [],
+#     "positions": [],
+#     "signals": [],
+# }
 # WebSocket 클라이언트들 저장
 ws_clients = {
     "orders": [],
     "trades": [],
-    "accounts": []
+    "accounts": [],
+    "positions": []
 }
+
+def broadcast(channel: str, data: dict):
+    for ws in ws_clients.get(channel, []):
+        try:
+            import asyncio
+            asyncio.create_task(ws.send_json(data))
+        except Exception as e:
+            print(f"WebSocket error on {channel}: {e}")
 
 
 @router.websocket("/ws/orders")

@@ -59,3 +59,11 @@ def save_account_value(account, tag, value, currency):
         })
     finally:
         db.close()
+
+
+def save_position(account, contract, position, avgCost):
+    return None
+
+
+def save_commission(report):
+    return None

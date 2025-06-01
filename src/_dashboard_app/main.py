@@ -5,7 +5,7 @@ import uvicorn
 from ib_insync import IB
 from contextlib import asynccontextmanager
 from src._dashboard_app.api import rest, webhook, websocket
-from src._trading_app.core.ib_event import register_event_handlers
+# from src._trading_app.core.ib_event_handlers import register_event_handlers
 import threading
 
 
@@ -21,7 +21,7 @@ web_app.include_router(rest.router)
 web_app.include_router(webhook.router)
 web_app.include_router(websocket.router)
 
-web_app.mount("/static", StaticFiles(directory="static"), name="static")
+# web_app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @web_app.get("/")

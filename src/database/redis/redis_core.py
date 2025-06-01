@@ -1,18 +1,20 @@
 
 import redis, os, threading, json
-from src.database.redis.redis_dashboard import callback_map as dashboard_callback_map
-from src.database.redis.redis_trading import callback_map as trading_callback_map
-from src.database.redis.redis_strategy import callback_map as strategy_callback_map
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
-all_callback_map = dashboard_callback_map | trading_callback_map | strategy_callback_map
-all_channel_list = list(all_callback_map.keys())
+def merge_callback():
+    from src.database.redis.redis_dashboard import callback_map as dashboard_callback_map
+    from src.database.redis.redis_trading import callback_map as trading_callback_map
+    from src.database.redis.redis_strategy import callback_map as strategy_callback_map
+    all_callback_map = dashboard_callback_map | trading_callback_map | strategy_callback_map
+    all_channel_list = list(all_callback_map.keys())
+    return all_channel_list, all_callback_map
 
 
 # 🟢 Redis Publish 함수들
-def redis_publish_event(event_type: str, data: dict):
+def redis_publish(event_type: str, data: str):
     # :param event_type: 이벤트 유형 (order, trade, account, position, submit, ticker)
     # :param data: 전송할 데이터 (dict 형식)
     channel = f"{event_type}"
@@ -23,25 +25,41 @@ def redis_publish_event(event_type: str, data: dict):
 
 # 🟢 Redis Subscribe 함수들
 def redis_subscribe_all(channel: list, callback_map: dict):
-    # :param channel: Redis 채널 이름 (예: 'order_channel')
-    # :param callback: 메시지를 처리할 함수
+    print(f"📩 redis_subscribe_all")
     pubsub = redis_client.pubsub()
     pubsub.subscribe(channel)
 
     def listen():
         for message in pubsub.listen():
-            if message["type"] == "message":
-                data = json.loads(message["data"])
+            # if message["type"] == "message":
+            #     data = json.loads(message["data"])
+            #     print(f"📩 Reidis subscribed: {data}")
+            #
+            #     if channel in callback_map:
+            #         callback_map[channel](data)
 
-                if channel in callback_map:
-                    callback_map[channel](data)
+            if message["type"] != "message":
+                continue
+
+            channel = message["channel"].encode()
+            data = json.loads(message["data"])
+            print(f"✅ IBKR 연결 성공 (port {data})")
+            # print(f"📩 Redis Subscribed [{channel.decode()}]: {data}")
+
+
+            # 채널에 해당하는 콜백 실행
+            if channel in callback_map:
+                callback = callback_map[channel]
+                callback(data)
+            else:
+                print(f"[!] No callback registered for channel: {channel.decode()}")
 
     thread = threading.Thread(target=listen, daemon=True)
     thread.start()
     print(f"[Redis Subscribe] Listening to {channel}")
 
-
-redis_subscribe_all(all_channel_list, all_callback_map)
+channel_list, callback_map = merge_callback()
+redis_subscribe_all(channel_list, callback_map)
 
 
 

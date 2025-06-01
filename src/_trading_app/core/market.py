@@ -6,21 +6,12 @@ import time, logging
 logger = logging.getLogger(__name__)
 
 
-class MarketData:
+class MarketMng:
     def __init__(self, ib:IB):
         self.ib = ib
 
-
     def get_market_price(self, symbol: str, asset_type: str = "STK", exchange: Optional[str] = None) -> Optional[float]:
-        """
-        범용 마켓 가격 조회 함수 (주식, 선물, 지수 등)
-        asset_type: STK (주식), FUT (선물), IND (지수)
-        exchange: 생략 시 기본 거래소로 설정
-        """
         try:
-            if not self.is_connected():
-                raise MarketDataException("Not connected to IBKR")
-
             # 1. 계약 생성
             contract: Contract
             if asset_type == "STK":
@@ -57,6 +48,56 @@ class MarketData:
         except Exception as e:
             raise MarketDataException(f"Failed to get market price: {str(e)}")
 
-    def sleep(self, seconds: int):
-        """Sleep while keeping connection alive"""
-        self.ib.sleep(seconds)
+        # 거래시간 조회
+
+#
+# from datetime import datetime, time, timedelta
+# import pytz
+#
+#
+# class TradingHours:
+#     def __init__(self):
+#         self.et_timezone = pytz.timezone('US/Eastern')
+#         self.market_open = time(00, 30)  # 9:30 AM ET
+#         self.market_close = time(23, 0)  # 4:00 PM ET
+#
+#     def is_trading_day(self) -> bool:
+#         """Check if today is a _web_app day (Monday-Friday)"""
+#         et_now = datetime.now(self.et_timezone)
+#         return et_now.weekday() < 5  # 0-4 represents Monday-Friday
+#
+#     def is_market_open(self) -> bool:
+#         """Check if market is currently open"""
+#         et_now = datetime.now(self.et_timezone)
+#         current_time = et_now.time()
+#
+#         return (
+#                 self.is_trading_day() and
+#                 self.market_open <= current_time < self.market_close
+#         )
+#
+#     def time_until_market_open(self) -> int:
+#         """Get seconds until market opens"""
+#         et_now = datetime.now(self.et_timezone)
+#         current_time = et_now.time()
+#
+#         if current_time < self.market_open:
+#             # Market opens today
+#             market_open = datetime.combine(et_now.date(), self.market_open)
+#             market_open = self.et_timezone.localize(market_open)
+#             return int((market_open - et_now).total_seconds())
+#         else:
+#             # Market opens next _web_app day
+#             next_day = et_now + timedelta(days=1)
+#             while next_day.weekday() >= 5:  # Skip weekends
+#                 next_day += timedelta(days=1)
+#             market_open = datetime.combine(next_day.date(), self.market_open)
+#             market_open = self.et_timezone.localize(market_open)
+#             return int((market_open - et_now).total_seconds())
+#
+#     def time_until_market_close(self) -> int:
+#         """Get seconds until market closes"""
+#         et_now = datetime.now(self.et_timezone)
+#         market_close = datetime.combine(et_now.date(), self.market_close)
+#         market_close = self.et_timezone.localize(market_close)
+#         return int((market_close - et_now).total_seconds())

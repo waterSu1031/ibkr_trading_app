@@ -1,79 +1,69 @@
-from typing import Optional, Dict, List
-from ib_insync import IB, Stock, Future, Order, AccountValue
-from src.shared.exceptions import OrderException
+from pydantic import BaseModel, Field
+from dataclasses import dataclass
+from typing import Optional, Dict, List, Literal
+from ib_insync import IB, Order, Contract
+from ib_insync import Stock, Future, Option, Index, Forex, CFD, Bond, Crypto
 from src.shared.logger import setup_logger
+import logging
 
-class OrderManager:
+logger = logging.getLogger(__name__)
+
+
+class OrderParam(BaseModel):
+    # ───── 기본 주문 정보 ─────
+    order_id: Optional[str] = Field(default=None, description="주문 고유 ID")
+    symbol: str
+    asset_type: Literal['STK', 'FUT', 'OPT', 'IND', 'CASH', 'CFD', 'BOND', 'CRYPTO']
+    action: Literal['BUY', 'SELL']
+    order_type: Literal['MKT', 'LMT', 'STP', 'STP LMT']
+    position_side: Literal['OPEN', 'CLOSE']
+    quantity: float
+
+    # ───── 가격 및 주문 조건 ─────
+    limit_price: Optional[float] = None
+    stop_price: Optional[float] = None
+    tif: Literal['DAY', 'GTC'] = "DAY"
+
+    # ───── 종목 정보 (시장, 통화 등) ─────
+    expiry: Optional[str] = None
+    exchange: Optional[str] = None
+    currency: str = "USD"
+
+    # ───── 옵션 전용 필드 ─────
+    strike: Optional[float] = None
+    right: Optional[Literal["C", "P"]] = None
+
+    # ───── 전략 및 메타 정보 ─────
+    strategy: Optional[str] = None
+    entry_condition: Optional[str] = None
+    signal_id: Optional[str] = None
+    timestamp: Optional[str] = None
+    user_tag: Optional[str] = None
+
+
+class OrderMng:
+
     def __init__(self, ib:IB):
         self.ib = ib
-        self.positions: Dict[str, str] = {}  # 예: {"MNQ": "LONG"}
+        # self.positions: Dict[str, str] = {}  # 예: {"MNQ": "LONG"}
         self.logger = setup_logger("order_manager")
 
-    def check_sufficient_funds(self) -> bool:
-        """Check if account has sufficient funds (50% reserve)"""
-        try:
-            # Explicitly type the account_summary
-            account_summary: List[AccountValue] = self.ib.reqAccountSummary() or []
-                
-            for summary in account_summary:
-                if summary.tag == "NetLiquidation":
-                    total_funds = float(summary.value)
-                    # Ensure we keep 50% in reserve
-                    return total_funds * 0.5 >= 0
-            return False
-            
-        except Exception as e:
-            raise OrderException(f"Failed to check funds: {str(e)}")
-
-    def get_available_funds(self) -> Optional[float]:
-        """Get available funds for _web_app"""
-        try:
-            # Explicitly type the account_summary
-            account_summary: List[AccountValue] = self.ib.reqAccountSummary() or []
-                
-            for summary in account_summary:
-                if summary.tag == "NetLiquidation":
-                    total_funds = float(summary.value)
-                    return total_funds * 0.5  # Return available funds (50% of total)
-            return None
-            
-        except Exception as e:
-            raise OrderException(f"Failed to get available funds: {str(e)}")
-
-    def place_order(
-            self,
-            symbol: str,
-            quantity: int,
-            action: str,
-            order_type: str,
-            limit_price: Optional[float],
-            stop_price: Optional[float],
-            tif: str,
-            asset_type: str,
-            exchange: Optional[str]
-    ) -> bool:
-        """
-        IBKR 주문 실행 함수 (롱/숏 포함)
-        action: LONG / SHORT
-        order_type: MKT / LMT / STP / STP LMT
-        """
+    def place_order(self, order_param:OrderParam) -> bool:
+        print("place_order")
         try:
             # 계약 생성 (주식, 선물 등 유형별로 구분 가능)
-            contract = self._create_contract(symbol, asset_type, exchange)
+            contract = self.create_contract(order_param)
 
             # 주문 객체 생성
-            order = self._build_order(
-                action=action,
-                quantity=quantity,
-                order_type=order_type,
-                limit_price=limit_price,
-                stop_price=stop_price,
-                tif=tif
-            )
+            order = self.build_order(order_param)
+
+            if not self.ib.isConnected():
+                self.logger.error("IBKR 서버와 연결되어 있지 않습니다.")
+                raise ConnectionError("IBKR Not connected")
 
             # 주문 전송
             self.ib.placeOrder(contract, order)
-            self.logger.info(f"Placed {action} order for {quantity}×{symbol}")
+            self.logger.info(f"Placed {order_param.action} order for {order_param.quantity}×{order_param.symbol}")
             self.logger.info(contract)
             self.logger.info(order)
             return True
@@ -83,68 +73,69 @@ class OrderManager:
             return False
 
 
-    def _create_contract(self, symbol: str, asset_type: str, exchange: Optional[str]):
-        if asset_type == "STK":
-            return Stock(symbol, exchange or "SMART", "USD")
-        elif asset_type == "FUT":
-            return Future(symbol, exchange or "GLOBEX", "USD")
+    def create_contract(self, order_param:OrderParam):
+        self.logger.info("create_contract")
+        contract = Contract()
+
+        if order_param.asset_type == "STK":
+            return Stock(order_param.symbol, order_param.exchange or "SMART", order_param.currency or "USD")
+        elif order_param.asset_type == "FUT":
+            return Future(
+                symbol=order_param.symbol,
+                lastTradeDateOrContractMonth=order_param.expiry,  # "202406" 형식
+                exchange=order_param.exchange or "CME",
+                currency=order_param.currency or "USD"
+            )
+        # elif order_param.asset_type == "OPT":
+        #     return Option(
+        #         symbol=order_param.symbol,
+        #         lastTradeDateOrContractMonth=order_param.expiry,
+        #         strike=order_param.strike,
+        #         right=order_param.right,        # "C" or "P"
+        #         exchange=order_param.exchange or "SMART",
+        #         currency=order_param.currency or "USD"
+        #     )
+        elif order_param.asset_type == "IND":
+            return Index(order_param.symbol, order_param.exchange or "CME", order_param.currency or "USD")
+        elif order_param.asset_type == "CASH":
+            return Forex(order_param.symbol)    # 예: "EURUSD"
+        elif order_param.asset_type == "CFD":
+            return CFD(order_param.symbol, order_param.exchange or "SMART", order_param.currency or "USD")
+        # elif order_param.asset_type == "BOND":
+        #     return Bond()
+        #     # return Bond(order_param.symbol, order_param.exchange or "SMART", order_param.currency or "USD")
+        elif order_param.asset_type == "CRYPTO":
+            return Crypto(order_param.symbol, order_param.exchange or "PAXOS", order_param.currency or "USD")
         else:
-            raise ValueError(f"Unsupported asset type: {asset_type}")
+            raise ValueError(f"Unsupported asset type: {order_param.asset_type}")
 
-    def _build_order(self, action: str, quantity: int, order_type: str,
-                     limit_price: Optional[float], stop_price: Optional[float], tif: str):
 
-        # action = "BUY" if action == "LONG" else "SELL"
-        if action in ("LONG", "BUY"):
-            action = "BUY"
-        elif action in ("SHORT", "SELL"):
-            action = "SELL"
+    def build_order(self, order_param:OrderParam):
+        self.logger.info("building order")
+        if order_param.action in "BUY":
+            if order_param.position_side in "OPEN" :
+                order_param.action = "BUY"
+            elif order_param.position_side in "CLOSE" :
+                order_param.action = "SELL"
+        elif order_param.action in "SELL":
+            if order_param.position_side in "OPEN" :
+                order_param.action = "SELL"
+            elif order_param.position_side in "CLOSE" :
+                order_param.action = "BUY"
+        self.logger.info(f"CLOSE requested, reversing to action: {order_param.action}")
 
         order = Order()
-        order.action = action
-        order.totalQuantity = quantity
-        order.tif = tif
-
-        if order_type == "MKT":
-            order.orderType = "MKT"
-        elif order_type == "LMT":
-            order.orderType = "LMT"
-            order.lmtPrice = limit_price
-        elif order_type == "STP":
-            order.orderType = "STP"
-            order.auxPrice = stop_price
-        elif order_type == "STP LMT":
-            order.orderType = "STP LMT"
-            order.lmtPrice = limit_price
-            order.auxPrice = stop_price
-        else:
-            raise ValueError(f"Unsupported order type: {order_type}")
+        order.action = order_param.action
+        order.totalQuantity = order_param.quantity
+        order.tif = order_param.tif
+        order.orderType = order_param.order_type
+        order.lmt_price = order_param.limit_price
+        order.auxPrice = order_param.stop_price
+        # if order_param.limit_price is not None:
+        #     order.lmtPrice = order_param.limit_price
+        # if order_param.stop_price is not None:
+        #     order.auxPrice = order_param.stop_price
 
         return order
 
-    def update_position(self, symbol: str, action: str):
-        """포지션 상태 업데이트"""
-        self.positions[symbol] = action
 
-    def get_opposite_position(self, symbol: str) -> str:
-        """현재 포지션과 반대 방향을 반환"""
-        current = self.positions.get(symbol)
-        if current == "LONG":
-            return "SHORT"
-        elif current == "SHORT":
-            return "LONG"
-        else:
-            return "LONG"  # 포지션 없는 경우 기본값
-
-    def get_positions(self) -> Dict[str, float]:
-        """Get current positions"""
-        try:
-            positions: Dict[str, float] = {}
-            for position in self.ib.positions() or []:
-                symbol = position.contract.symbol
-                quantity = position.position
-                positions[symbol] = quantity
-            return positions
-            
-        except Exception as e:
-            raise OrderException(f"Failed to get positions: {str(e)}")

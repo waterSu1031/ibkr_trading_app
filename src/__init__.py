@@ -1,7 +1,7 @@
 """Main package initialization"""
 
-from src._trading_app.core.market import MarketData
-from src._trading_app.core.order import OrderManager
+from src._trading_app.core.market import MarketMng
+from src._trading_app.core.order import OrderMng
 from src.shared.logger import setup_logger
 from .utils.reporter import Reporter
 from .utils.screenshotter import Screenshotter
@@ -18,8 +18,8 @@ from src.shared.exceptions import (
 )
 
 __all__ = [
-    'MarketData',
-    'OrderManager',
+    'MarketMng',
+    'OrderMng',
     'setup_logger',
     'Reporter',
     'Screenshotter',
