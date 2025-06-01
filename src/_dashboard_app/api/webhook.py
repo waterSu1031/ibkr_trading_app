@@ -16,6 +16,7 @@ async def webhook(req: Request):
 
         # Redis 채널로 publish
         redis_client.publish('submit_order', json.dumps(data))
+        return None
 
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": "Invalid JSON", "detail": str(e)})

@@ -15,8 +15,7 @@ def merge_callback():
 
 # 🟢 Redis Publish 함수들
 def redis_publish(event_type: str, data: str):
-    # :param event_type: 이벤트 유형 (order, trade, account, position, submit, ticker)
-    # :param data: 전송할 데이터 (dict 형식)
+    print(f"📩 redis_publish")
     channel = f"{event_type}"
     message = json.dumps(data)
     redis_client.publish(channel, message)
@@ -24,20 +23,13 @@ def redis_publish(event_type: str, data: str):
 
 
 # 🟢 Redis Subscribe 함수들
-def redis_subscribe_all(channel: list, callback_map: dict):
+def redis_subscribe_all(channel: list, all_callback_map: dict):
     print(f"📩 redis_subscribe_all")
     pubsub = redis_client.pubsub()
     pubsub.subscribe(channel)
 
     def listen():
         for message in pubsub.listen():
-            # if message["type"] == "message":
-            #     data = json.loads(message["data"])
-            #     print(f"📩 Reidis subscribed: {data}")
-            #
-            #     if channel in callback_map:
-            #         callback_map[channel](data)
-
             if message["type"] != "message":
                 continue
 
@@ -46,10 +38,8 @@ def redis_subscribe_all(channel: list, callback_map: dict):
             print(f"✅ IBKR 연결 성공 (port {data})")
             # print(f"📩 Redis Subscribed [{channel.decode()}]: {data}")
 
-
-            # 채널에 해당하는 콜백 실행
-            if channel in callback_map:
-                callback = callback_map[channel]
+            if channel in all_callback_map:
+                callback = all_callback_map[channel]
                 callback(data)
             else:
                 print(f"[!] No callback registered for channel: {channel.decode()}")

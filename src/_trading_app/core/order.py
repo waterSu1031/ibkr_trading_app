@@ -112,15 +112,15 @@ class OrderMng:
 
     def build_order(self, order_param:OrderParam):
         self.logger.info("building order")
-        if order_param.action in "BUY":
-            if order_param.position_side in "OPEN" :
+        if order_param.action == "BUY":
+            if order_param.position_side == "OPEN" :
                 order_param.action = "BUY"
-            elif order_param.position_side in "CLOSE" :
+            elif order_param.position_side == "CLOSE" :
                 order_param.action = "SELL"
-        elif order_param.action in "SELL":
-            if order_param.position_side in "OPEN" :
+        elif order_param.action == "SELL":
+            if order_param.position_side == "OPEN" :
                 order_param.action = "SELL"
-            elif order_param.position_side in "CLOSE" :
+            elif order_param.position_side == "CLOSE" :
                 order_param.action = "BUY"
         self.logger.info(f"CLOSE requested, reversing to action: {order_param.action}")
 
