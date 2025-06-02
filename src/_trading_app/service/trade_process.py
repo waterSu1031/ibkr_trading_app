@@ -1,23 +1,17 @@
 import logging
 from typing import Union
-
-from ib_insync import IB
-
-from src._trading_app.main import trading_app
 from src._trading_app.core.order import OrderParam
 from src._trading_app.core.order import OrderMng
-
-# 1. redis 에서 받아서 handle 실행 + db저장
-# 2.
-# 3. handle에서 order.execute로 보내기
+from src._trading_app.core.ib_provider import get_ib
 
 logger = logging.getLogger(__name__)
 
-
+order_mng = OrderMng(get_ib())
+print(id(get_ib()))
 
 # def handle_signal(order_param:OrderParam) -> OrderParam:
-def handle_signal(ib:IB, order_param: Union[OrderParam, dict]) -> OrderParam:
-    order_mng = OrderMng(ib)
+def handle_signal(order_param: Union[OrderParam, dict]) -> bool:
+
     if isinstance(order_param, dict):
         try:
             order_param = OrderParam(**order_param)

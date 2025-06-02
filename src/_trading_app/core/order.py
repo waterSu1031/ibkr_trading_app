@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Optional, Dict, List, Literal
 from ib_insync import IB, Order, Contract
 from ib_insync import Stock, Future, Option, Index, Forex, CFD, Bond, Crypto
-from src.shared.logger import setup_logger
 import logging
+from src._trading_app.core.ib_provider import get_ib
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ class OrderMng:
     def __init__(self, ib:IB):
         self.ib = ib
         # self.positions: Dict[str, str] = {}  # 예: {"MNQ": "LONG"}
-        self.logger = setup_logger("order_manager")
 
     def place_order(self, order_param:OrderParam) -> bool:
         print("place_order")
@@ -57,24 +56,26 @@ class OrderMng:
             # 주문 객체 생성
             order = self.build_order(order_param)
 
+            print(id(get_ib()))
+
             if not self.ib.isConnected():
-                self.logger.error("IBKR 서버와 연결되어 있지 않습니다.")
+                print("IBKR 서버와 연결되어 있지 않습니다.")
                 raise ConnectionError("IBKR Not connected")
 
             # 주문 전송
             self.ib.placeOrder(contract, order)
-            self.logger.info(f"Placed {order_param.action} order for {order_param.quantity}×{order_param.symbol}")
-            self.logger.info(contract)
-            self.logger.info(order)
+            print(f"Placed {order_param.action} order for {order_param.quantity}×{order_param.symbol}")
+            print(contract)
+            print(order)
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to place order: {str(e)}")
+            print(f"Failed to place order: {str(e)}")
             return False
 
 
     def create_contract(self, order_param:OrderParam):
-        self.logger.info("create_contract")
+        print("create_contract")
         contract = Contract()
 
         if order_param.asset_type == "STK":
@@ -111,25 +112,26 @@ class OrderMng:
 
 
     def build_order(self, order_param:OrderParam):
-        self.logger.info("building order")
+        print("building order")
+        result_action = ""
         if order_param.action == "BUY":
             if order_param.position_side == "OPEN" :
-                order_param.action = "BUY"
+                result_action = "BUY"
             elif order_param.position_side == "CLOSE" :
-                order_param.action = "SELL"
+                result_action = "SELL"
         elif order_param.action == "SELL":
             if order_param.position_side == "OPEN" :
-                order_param.action = "SELL"
+                result_action = "SELL"
             elif order_param.position_side == "CLOSE" :
-                order_param.action = "BUY"
-        self.logger.info(f"CLOSE requested, reversing to action: {order_param.action}")
+                result_action = "BUY"
+        print(f"CLOSE requested, reversing to action: {result_action}")
 
         order = Order()
-        order.action = order_param.action
+        order.action = result_action
         order.totalQuantity = order_param.quantity
         order.tif = order_param.tif
         order.orderType = order_param.order_type
-        order.lmt_price = order_param.limit_price
+        order.lmtPrice = order_param.limit_price
         order.auxPrice = order_param.stop_price
         # if order_param.limit_price is not None:
         #     order.lmtPrice = order_param.limit_price

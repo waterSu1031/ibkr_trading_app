@@ -25,7 +25,7 @@ def save_trade(fill):
 
 
 # 주문 저장
-def save_order(order, order_state, contract):
+def save_order(order, order_status, contract):
     db = SessionLocal()
     try:
         upsert_order(db, {
@@ -38,7 +38,7 @@ def save_order(order, order_state, contract):
             "limit_price": getattr(order, 'lmtPrice', None),
             "aux_price": getattr(order, 'auxPrice', None),
             "tif": order.tif,
-            "status": order_state.status,
+            "status": order_status.status,
             "symbol": contract.symbol,
             "created_at": datetime.utcnow(),
         })

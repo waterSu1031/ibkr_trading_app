@@ -1,12 +1,12 @@
 
 // WebSocket 연결
-const tradesSocket = new WebSocket("ws://localhost:8000/ws/trades");
-const ordersSocket = new WebSocket("ws://localhost:8000/ws/orders");
-const accountsSocket = new WebSocket("ws://localhost:8000/ws/accounts");
-//const positionsSocket = new WebSocket("ws://localhost:8000/ws/positions");
+const orderListSocket = new WebSocket("ws://localhost:8000/ws/order_list");
+const tradeListSocket = new WebSocket("ws://localhost:8000/ws/trade_list");
+const positionListSocket = new WebSocket("ws://localhost:8000/ws/position_list");
+const accountSummarySocket = new WebSocket("ws://localhost:8000/ws/account_summary");
 
 // 체결 수신 → 표에 추가
-tradesSocket.onmessage = function(event) {
+tradeListSocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -24,7 +24,7 @@ tradesSocket.onmessage = function(event) {
 };
 
 // 주문 수신 → 표에 추가
-ordersSocket.onmessage = function(event) {
+orderListSocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -44,27 +44,29 @@ ordersSocket.onmessage = function(event) {
     document.querySelector("#orders-body").prepend(row);
 };
 
+// 포지션 수신 → 표에 추가
+positionListSocket.onmessage = function(event) {
+   const data = JSON.parse(event.data);
+   const row = document.createElement("tr");
+   row.innerHTML = `
+       <td>${data.symbol}</td>
+       <td>${data.quantity}</td>
+       <td>${data.avgCost}</td>
+       <td>${data.marketPrice || ""}</td>
+       <td>${data.unrealizedPnL || ""}</td>
+       <td>${data.realizedPnL || ""}</td>
+       <td>${data.account || ""}</td>
+       <td>${data.updatedAt || ""}</td>
+   `;
+   document.querySelector("#positions-body").prepend(row);
+};
+
 // 계좌 수신 → 정보 갱신
-accountsSocket.onmessage = function(event) {
+accountSummarySocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
     const div = document.createElement("div");
     div.innerHTML = `<strong>${data.tag}:</strong> ${data.value} ${data.currency}`;
     document.querySelector("#account-panel").prepend(div);
 };
 
-// 포지션 수신 → 표에 추가
-//positionsSocket.onmessage = function(event) {
-//    const data = JSON.parse(event.data);
-//    const row = document.createElement("tr");
-//    row.innerHTML = `
-//        <td>${data.symbol}</td>
-//        <td>${data.quantity}</td>
-//        <td>${data.avgCost}</td>
-//        <td>${data.marketPrice || ""}</td>
-//        <td>${data.unrealizedPnL || ""}</td>
-//        <td>${data.realizedPnL || ""}</td>
-//        <td>${data.account || ""}</td>
-//        <td>${data.updatedAt || ""}</td>
-//    `;
-//    document.querySelector("#positions-body").prepend(row);
-//};
+

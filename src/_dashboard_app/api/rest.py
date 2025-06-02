@@ -7,12 +7,11 @@ from src.database.sqlite.crud.trade import get_all_trades
 from src.database.sqlite.crud.account import get_all_accounts
 from src.database.sqlite.crud.position import get_all_positions
 from src.database.sqlite.database import SessionLocal
+from src.config import config
 
 router = APIRouter()
 
-BASE_DIR = Path(__file__).resolve().parent.parent  # src/
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
+templates = Jinja2Templates(directory=str(config.TEMPLATE_DIR))
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request):
@@ -20,7 +19,7 @@ def dashboard_page(request: Request):
 
 
 # Optional REST endpoints (for data inspection/debug)
-@router.get("/api/orders")
+@router.get("/api/order_list")
 def get_orders():
     db = SessionLocal()
     orders = get_all_orders(db)
@@ -28,7 +27,7 @@ def get_orders():
     return orders
 
 
-@router.get("/api/trades")
+@router.get("/api/trade_list")
 def get_trades():
     db = SessionLocal()
     trades = get_all_trades(db)
@@ -36,17 +35,17 @@ def get_trades():
     return trades
 
 
-@router.get("/api/accounts")
-def get_accounts():
-    db = SessionLocal()
-    accounts = get_all_accounts(db)
-    db.close()
-    return accounts
-
-
-@router.get("/api/positions")
+@router.get("/api/position_list")
 def get_positions():
     db = SessionLocal()
     positions = get_all_positions(db)
     db.close()
     return positions
+
+
+@router.get("/api/account_summary")
+def get_accounts():
+    db = SessionLocal()
+    accounts = get_all_accounts(db)
+    db.close()
+    return accounts

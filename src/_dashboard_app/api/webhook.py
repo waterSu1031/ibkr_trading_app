@@ -3,10 +3,10 @@ from fastapi import APIRouter, Request
 from starlette.responses import JSONResponse
 from src.database.redis.redis_core import redis_client
 
-import redis
 import json
-
+from src._trading_app.core.ib_provider import get_ib
 router = APIRouter()
+
 
 @router.post("/webhook")
 async def webhook(req: Request):

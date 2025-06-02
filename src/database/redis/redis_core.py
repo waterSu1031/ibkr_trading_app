@@ -1,8 +1,9 @@
 
 import redis, os, threading, json
+from src.config import config
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+# REDIS_URL = os.getenv("REDIS_URL", f"redis://localhost:6379/0")
+redis_client = redis.Redis.from_url(config.REDIS_URL, decode_responses=True)
 
 def merge_callback():
     from src.database.redis.redis_dashboard import callback_map as dashboard_callback_map

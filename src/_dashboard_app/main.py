@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import uvicorn
-from ib_insync import IB
+import uvicorn, os
+# from ib_insync import IB
 from contextlib import asynccontextmanager
 from src._dashboard_app.api import rest, webhook, websocket
+from src._trading_app.main import trading_app
+from src.config import config
 # from src._trading_app.core.ib_event_handlers import register_event_handlers
 import threading
 
@@ -21,7 +23,7 @@ web_app.include_router(rest.router)
 web_app.include_router(webhook.router)
 web_app.include_router(websocket.router)
 
-# web_app.mount("/static", StaticFiles(directory="static"), name="static")
+web_app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
 
 
 @web_app.get("/")
@@ -36,3 +38,4 @@ def favicon():
 
 if __name__ == "__main__":
     uvicorn.run(web_app, host="127.0.0.1", port=8000, reload=False)
+    # trading_app.connect(port=4002)

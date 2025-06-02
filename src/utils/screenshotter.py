@@ -2,11 +2,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import pyautogui
-from src.config import TradingConfig  # Updated import path
+from src.config import config  # Updated import path
 
 class Screenshotter:
     def __init__(self):
-        self.config = TradingConfig()
+        self.config = config
 
     def capture(self, symbol: str) -> Optional[Path]:
         """

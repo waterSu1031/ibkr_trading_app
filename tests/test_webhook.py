@@ -9,7 +9,7 @@ def test_webhook_stock():
     headers = {"Content-Type": "application/json"}
     payload = {
         # ───── 기본 주문 정보 ─────
-        "order_id": "AAPL-MKT-20250531-001",
+        "order_id": "",     #AAPL-MKT-20250531-001
         "symbol": "AAPL",
         "asset_type": "STK",
         "action": "BUY",
@@ -52,7 +52,7 @@ def test_webhook_future():
     headers = {"Content-Type": "application/json"}
     payload = {
         # ───── 기본 주문 정보 ─────
-        "order_id": "ES-MKT-20250531-001",
+        "order_id": "", #ES-MKT-20250531-001
         "symbol": "ESM25",
         "asset_type": "FUT",
         "action": "SELL",

@@ -1,48 +1,52 @@
-# Python
-.env.dev
-.env.prod
+# ▶ Python 캐시 및 임시 파일
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# Virtual Environment
+# ▶ 가상환경
+.venv/
+env/
 venv/
 ENV/
-env/
 
-# Trading Records
-# trading_records/screenshots/*
-# trading_records/reports/*
-!storage/trading_records/screenshots/.gitkeep
-!storage/trading_records/reports/.gitkeep
+# ▶ 테스트/커버리지 산출물
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 
-# Logs
-storage/logs/*
-!storage/logs/.gitkeep
+# ▶ 로그 및 실행 산출물
+*.log
+*.pid
+*.db
+*.sqlite3
 
-# IDE
-.idea/
+# ▶ 빌드 및 패키징 결과물
+build/
+dist/
+*.egg-info/
+*.egg
+wheels/
+sdist/
+
+# ▶ IDE 및 에디터 설정
 .vscode/
-*.swp
+.idea/
 *.swo
+*.swp
 
-# OS
+# ▶ 환경 설정 및 민감 정보
+.env
+.env.*
+!.env.template
+
+# ▶ 기타 시스템 파일
 .DS_Store
 Thumbs.db
+
+# ▶ 프로젝트 로컬 저장소
+storage/*
+!storage/.gitkeep
+!storage/logs/.gitkeep
+!storage/trading_records/reports/.gitkeep
+!storage/trading_records/screenshots/.gitkeep

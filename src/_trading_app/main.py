@@ -1,34 +1,24 @@
-from typing import Optional, Dict
-import os
-import time
-import asyncio
 import threading
+import time, inspect
 import logging
-from ib_insync import IB, util
 
-from src._trading_app.core.market import MarketMng
-from src._trading_app.core.order import OrderMng
 # from src._trading_app.service.trade_process import handle_signal
-from src.shared.logger import setup_logger
 from src.utils.reporter import Reporter
 from src.utils.screenshotter import Screenshotter
 from src.utils.email_sender import EmailSender
 from src.shared.exceptions import MarketDataException
-
-
+from src._trading_app.core.ib_provider import get_ib
+# from src._trading_app.ib_holder import get_ib
 
 logger = logging.getLogger(__name__)
 
 class TradingApp:
 
     def __init__(self):
-        self.ib = IB()
+        self.ib = get_ib()
         self.connection_timeout = 30
         self.retry_interval = 5
         self.max_retries = 3
-
-        self.market     = MarketMng(self.ib)
-        self.order      = OrderMng(self.ib)
 
         self.logger     = logger
         self.reporter   = Reporter()
@@ -50,12 +40,14 @@ class TradingApp:
                     timeout=self.connection_timeout
                 )
                 time.sleep(1)
-
+                print(id(get_ib()))
                 if self.ib.isConnected():
                     print(f"✅ IBKR 연결 성공 (port {port})")
                     self.register_event_handlers()
+                    print(id(get_ib()))
                     # self.register_async_loop()
-                    self.ib.run()
+                    # self.ib.run()
+                    threading.Thread(target=self.ib.run(), daemon=True).start()
 
                     # asyncio.create_task()
                     # threading.Thread(target=self.ib.run, daemon=True).start()
@@ -80,17 +72,16 @@ class TradingApp:
     def register_event_handlers(self):
         # ✅ 이벤트 핸들러 모듈 추가
         from src._trading_app.core.ib_event_handlers import (
-            on_exec_details,
             on_open_order,
-            on_account_summary,
+            on_exec_details,
             on_position,
-            on_commission_report
+            on_account_summary,
         )
-        self.ib.execDetailsEvent += on_exec_details
         self.ib.openOrderEvent += on_open_order
-        self.ib.accountSummaryEvent += on_account_summary
+        self.ib.execDetailsEvent += on_exec_details
         self.ib.positionEvent += on_position
-        self.ib.commissionReportEvent += on_commission_report
+        self.ib.accountSummaryEvent += on_account_summary
+        print("등록될 함수 시그니처:", inspect.signature(on_open_order))
         print("📌 이벤트 핸들러 등록 완료")
 
     def register_async_loop(self):

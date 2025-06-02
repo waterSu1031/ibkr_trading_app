@@ -1,13 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from pathlib import Path
+from src.config import config
 
 # DB 위치 지정
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# DB_PATH = os.path.join(BASE_DIR, "database", "trading.db")
-BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "database" / "trading.db"
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+DATABASE_URL = f"sqlite:///{config.DATABASE_DIR}"
 
 # 엔진 설정
 engine = create_engine(

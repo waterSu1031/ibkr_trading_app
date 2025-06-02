@@ -1,8 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-
-# from src.database.redis.redis_core import redis_client
-from uvicorn.loops import asyncio
-import json
+import asyncio
 
 
 router = APIRouter()
@@ -12,56 +9,67 @@ router = APIRouter()
 #     "trades": [],
 #     "orders": [],
 #     "accounts": [],
-#     "positions": [],
+#     "position_list": [],
 #     "signals": [],
 # }
 # WebSocket 클라이언트들 저장
-ws_clients = {
-    "orders": [],
-    "trades": [],
-    "accounts": [],
-    "positions": []
+ws_channels = {
+    "order_list": [],
+    "trade_list": [],
+    "position_list": [],
+    "account_summary": []
 }
 
 def broadcast(channel: str, data: dict):
-    for ws in ws_clients.get(channel, []):
+    for ws in ws_channels.get(channel, []):
         try:
-            import asyncio
+            print("None")
             asyncio.create_task(ws.send_json(data))
         except Exception as e:
             print(f"WebSocket error on {channel}: {e}")
 
 
-@router.websocket("/ws/orders")
+@router.websocket("/ws/order_list")
 async def websocket_orders(websocket: WebSocket):
     await websocket.accept()
-    ws_clients["orders"].append(websocket)
+    ws_channels["order_list"].append(websocket)
     try:
+        print("None")
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        ws_clients["orders"].remove(websocket)
+        ws_channels["order_list"].remove(websocket)
 
 
-@router.websocket("/ws/trades")
-async def websocket_trades(websocket: WebSocket):
+@router.websocket("/ws/trade_list")
+async def websocket_trade_list(websocket: WebSocket):
     await websocket.accept()
-    ws_clients["trades"].append(websocket)
+    ws_channels["trade_list"].append(websocket)
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        ws_clients["trades"].remove(websocket)
+        ws_channels["trade_list"].remove(websocket)
 
-
-@router.websocket("/ws/accounts")
-async def websocket_accounts(websocket: WebSocket):
+@router.websocket("/ws/position_list")
+async def websocket_position_list(websocket: WebSocket):
     await websocket.accept()
-    ws_clients["accounts"].append(websocket)
+    ws_channels["position_list"].append(websocket)
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        ws_clients["accounts"].remove(websocket)
+        ws_channels["position_list"].remove(websocket)
+
+
+@router.websocket("/ws/account_summary")
+async def websocket_account_summary(websocket: WebSocket):
+    await websocket.accept()
+    ws_channels["account_summary"].append(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        ws_channels["account_summary"].remove(websocket)
 
 

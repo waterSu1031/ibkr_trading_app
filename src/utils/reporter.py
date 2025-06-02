@@ -78,7 +78,7 @@ class Reporter:
                 th {{ background-color: #f5f5f5; }}
                 tr:nth-child(even) {{ background-color: #f9f9f9; }}
                 h1, h2 {{ color: #333; }}
-                .screenshot {{ max-width: 800px; margin: 10px 0; }}
+                .screenshot {{ max-width: 80000px; margin: 10px 0; }}
             </style>
         </head>
         <body>

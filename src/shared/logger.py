@@ -1,11 +1,10 @@
 import logging
 from datetime import datetime
-from src.config import TradingConfig  # Updated import path
+from src.config import config
 
 
 def setup_logger(name: str) -> logging.Logger:
     """Setup logger with file and console handlers"""
-    config = TradingConfig()
     
     # Create logger
     logger = logging.getLogger(name)

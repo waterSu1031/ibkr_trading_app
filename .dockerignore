@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Logs and DB
+*.log
+*.db
+*.sqlite3
+storage/
+!storage/.gitkeep
+
+# Test output
+.pytest_cache/
+.coverage
+htmlcov/
+tests/htmlcov/
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# dotenv files
+.env
+.env.*
+!.env.template
