@@ -1,39 +1,37 @@
 from sqlalchemy.orm import Session
+from src.database.sqlite.schemas import PositionMessage
 from src.database.sqlite.models import Position
-from datetime import datetime
 
 
-def upsert_position(db: Session, data: dict):
-    pos = db.query(Position).filter(
-        Position.account == data["account"],
-        Position.symbol == data["symbol"]
+# 🟦 업서트 (insert or update)
+def upsert_position(db: Session, data: PositionMessage) -> None:
+    existing = db.query(Position).filter_by(
+        account=data.account,
+        symbol=data.symbol
     ).first()
-    if pos:
-        pos.asset_type = data["asset_type"]
-        pos.exchange = data["exchange"]
-        pos.quantity = data["quantity"]
-        pos.avg_price = data["avg_price"]
-        pos.updated_at = datetime.utcnow()
+
+    if existing:
+        existing.position = data.position
+        existing.avg_cost = data.avgCost
+        existing.currency = data.currency
     else:
-        pos = Position(**data)
-        db.add(pos)
+        new_position = Position(
+            account=data.account,
+            symbol=data.symbol,
+            position=data.position,
+            avg_cost=data.avgCost,
+            currency=data.currency
+        )
+        db.add(new_position)
+
     db.commit()
-    return pos
 
 
-def get_all_positions(db: Session):
-    return db.query(Position).all()
+# 🟦 단일 조회
+def get_position(db: Session, account: str, symbol: str) -> Position | None:
+    return db.query(Position).filter_by(account=account, symbol=symbol).first()
 
 
-def get_position(db: Session, account: str, symbol: str):
-    return db.query(Position).filter(
-        Position.account == account,
-        Position.symbol == symbol
-    ).first()
-
-
-def delete_position(db: Session, account: str, symbol: str):
-    pos = get_position(db, account, symbol)
-    if pos:
-        db.delete(pos)
-        db.commit()
+# 🟦 전체 계좌의 포지션 리스트 조회
+def get_positions_by_account(db: Session, account: str) -> list[Position]:
+    return db.query(Position).filter_by(account=account).all()

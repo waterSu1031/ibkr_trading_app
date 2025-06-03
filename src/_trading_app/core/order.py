@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from dataclasses import dataclass
 from typing import Optional, Dict, List, Literal
-from ib_insync import IB, Order, Contract
+from ib_insync import IB, Order, Contract, Trade
 from ib_insync import Stock, Future, Option, Index, Forex, CFD, Bond, Crypto
 import logging
 from src._trading_app.core.ib_provider import get_ib
@@ -47,8 +47,7 @@ class OrderMng:
         self.ib = ib
         # self.positions: Dict[str, str] = {}  # 예: {"MNQ": "LONG"}
 
-    def place_order(self, order_param:OrderParam) -> bool:
-        print("place_order")
+    async def place_order(self, order_param:OrderParam) -> bool:
         try:
             # 계약 생성 (주식, 선물 등 유형별로 구분 가능)
             contract = self.create_contract(order_param)
@@ -56,28 +55,23 @@ class OrderMng:
             # 주문 객체 생성
             order = self.build_order(order_param)
 
-            print(id(get_ib()))
-
             if not self.ib.isConnected():
-                print("IBKR 서버와 연결되어 있지 않습니다.")
+                logger.warning("IBKR 서버와 연결되어 있지 않습니다.")
                 raise ConnectionError("IBKR Not connected")
 
             # 주문 전송
-            self.ib.placeOrder(contract, order)
-            print(f"Placed {order_param.action} order for {order_param.quantity}×{order_param.symbol}")
-            print(contract)
-            print(order)
+            trade = self.ib.placeOrder(contract, order)
+            # await trade.fillEvent.wait(future=60)
+            print(f"📩📌Placed {order_param.action} order for {order_param.symbol}X{order_param.quantity}")
             return True
 
         except Exception as e:
-            print(f"Failed to place order: {str(e)}")
+            logger.warning(f"Failed to place order: {str(e)}")
             return False
 
 
     def create_contract(self, order_param:OrderParam):
-        print("create_contract")
-        contract = Contract()
-
+        # contract = Contract()
         if order_param.asset_type == "STK":
             return Stock(order_param.symbol, order_param.exchange or "SMART", order_param.currency or "USD")
         elif order_param.asset_type == "FUT":
@@ -112,7 +106,6 @@ class OrderMng:
 
 
     def build_order(self, order_param:OrderParam):
-        print("building order")
         result_action = ""
         if order_param.action == "BUY":
             if order_param.position_side == "OPEN" :
@@ -124,7 +117,6 @@ class OrderMng:
                 result_action = "SELL"
             elif order_param.position_side == "CLOSE" :
                 result_action = "BUY"
-        print(f"CLOSE requested, reversing to action: {result_action}")
 
         order = Order()
         order.action = result_action

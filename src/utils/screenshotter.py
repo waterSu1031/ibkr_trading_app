@@ -1,8 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import pyautogui
+import pyautogui, logging
 from src.config import config  # Updated import path
+
+logger = logging.getLogger(__name__)
 
 class Screenshotter:
     def __init__(self):
@@ -26,7 +28,7 @@ class Screenshotter:
             return filepath
 
         except Exception as e:
-            print(f"Error capturing screenshot: {str(e)}")
+            logger.warning(f"Error capturing screenshot: {str(e)}")
             return None
 
     def capture_region(self, symbol: str, region: tuple) -> Optional[Path]:
@@ -47,5 +49,5 @@ class Screenshotter:
             return filepath
 
         except Exception as e:
-            print(f"Error capturing region screenshot: {str(e)}")
+            logger.warning(f"Error capturing region screenshot: {str(e)}")
             return None

@@ -15,7 +15,6 @@ engine = create_engine(
 # 세션 및 베이스
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
-
 print("▶ Connecting to SQLite file:", DATABASE_URL)
 
 def get_db():

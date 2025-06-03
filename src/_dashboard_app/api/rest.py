@@ -2,10 +2,12 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+
+from starlette.responses import FileResponse
+
 from src.database.sqlite.crud.order import get_all_orders
-from src.database.sqlite.crud.trade import get_all_trades
-from src.database.sqlite.crud.account import get_all_accounts
-from src.database.sqlite.crud.position import get_all_positions
+# from src.database.sqlite.crud.account_summary import get_all_account_summary
+from src.database.sqlite.crud.position import get_position
 from src.database.sqlite.database import SessionLocal
 from src.config import config
 
@@ -49,3 +51,13 @@ def get_accounts():
     accounts = get_all_accounts(db)
     db.close()
     return accounts
+
+
+@router.get("/")
+def root():
+    return {"status": "_dashboard_app running"}
+
+
+@router.get("/favicon.ico")
+def favicon():
+    return FileResponse("static/favicon.ico")

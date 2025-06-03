@@ -2,9 +2,10 @@
 from fastapi import APIRouter, Request
 from starlette.responses import JSONResponse
 from src.database.redis.redis_core import redis_client
-
+from src._trading_app.service.trade_process import handle_signal
 import json
 from src._trading_app.core.ib_provider import get_ib
+
 router = APIRouter()
 
 
@@ -12,10 +13,11 @@ router = APIRouter()
 async def webhook(req: Request):
     try:
         data = await req.json()
-        print(f"📩 Webhook received: {data}")
+        print(f"📩 webhook received: {data}")
 
         # Redis 채널로 publish
-        redis_client.publish('submit_order', json.dumps(data))
+        await redis_client.publish("submit_order", json.dumps(data))
+        # await handle_signal(data)
         return None
 
     except Exception as e:

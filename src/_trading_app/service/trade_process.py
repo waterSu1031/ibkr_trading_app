@@ -6,18 +6,10 @@ from src._trading_app.core.ib_provider import get_ib
 
 logger = logging.getLogger(__name__)
 
-order_mng = OrderMng(get_ib())
-print(id(get_ib()))
+async def handle_signal(order_param: Union[OrderParam, dict]) -> bool:
 
-# def handle_signal(order_param:OrderParam) -> OrderParam:
-def handle_signal(order_param: Union[OrderParam, dict]) -> bool:
+    order_param = OrderParam(**order_param)
 
-    if isinstance(order_param, dict):
-        try:
-            order_param = OrderParam(**order_param)
-        except TypeError as e:
-            logger.error(f"Invalid order_param format: {e}")
-            return False
     try:
         # logger.info(
         #     f"Signal: {order_param.action} {order_param.quantity}×{order_param.symbol} | Type: {order_param.order_type}, Limit: {order_param.limit_price}, Stop: {order_param.stop_price}")
@@ -35,9 +27,10 @@ def handle_signal(order_param: Union[OrderParam, dict]) -> bool:
         #     limit_price = self.market.get_market_price(symbol)
         #     self.logger.info(f"Defaulted limit price to market price: {limit_price}")
 
-        # 주문 실행
+        ib = get_ib()
+        order_mng = OrderMng(ib)
 
-        success = order_mng.place_order(order_param)
+        success = await order_mng.place_order(order_param)
 
         # 예시로 거래 기록 저장, 이메일 전송 등 추가 가능
         if success:

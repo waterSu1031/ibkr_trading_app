@@ -5,6 +5,9 @@ const tradeListSocket = new WebSocket("ws://localhost:8000/ws/trade_list");
 const positionListSocket = new WebSocket("ws://localhost:8000/ws/position_list");
 const accountSummarySocket = new WebSocket("ws://localhost:8000/ws/account_summary");
 
+orderListSocket.onopen = () => {console.log("orderListSocket open");};
+orderListSocket.onclose = () => {console.log("orderListSocket close");};
+
 // 체결 수신 → 표에 추가
 tradeListSocket.onmessage = function(event) {
     const data = JSON.parse(event.data);
@@ -25,6 +28,7 @@ tradeListSocket.onmessage = function(event) {
 
 // 주문 수신 → 표에 추가
 orderListSocket.onmessage = function(event) {
+    console.log("orderListSocket")
     const data = JSON.parse(event.data);
     const row = document.createElement("tr");
     row.innerHTML = `

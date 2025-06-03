@@ -3,7 +3,6 @@ import json, time
 import asyncio
 from ib_insync import IB, util
 from src.database.redis.redis_core import redis_client  # Redis client instance
-from src._trading_app.service.data_updater import save_position  # DB 저장 함수
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ def request_positions(ib: IB):
                 "avgCost": pos.avgCost
             }
             logger.info(f"[Position] {data['symbol']} = {data['position']} @ {data['avgCost']}")
-            redis_client.publish("position_channel", json.dumps(data))
+            # redis_client.publish("position_channel", json.dumps(data))
             save_position(data)  # DB 저장
 
         logger.info("✅ 포지션 요청 및 전송 완료")

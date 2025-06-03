@@ -1,7 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import asyncio
 
-
 router = APIRouter()
 
 # 전역 WebSocket broadcast 대상들
@@ -20,13 +19,40 @@ ws_channels = {
     "account_summary": []
 }
 
-def broadcast(channel: str, data: dict):
+def check_data_type(data):
+    if isinstance(data, bytes):
+        return "bytes"
+    elif isinstance(data, str):
+        return "str"
+    elif isinstance(data, dict):
+        return "dict"
+    else:
+        return f"unknown: {type(data)}"
+
+async def broadcast(channel: str, data: dict):
+    print(check_data_type(channel))
+    print(ws_channels)
+    print(check_data_type(ws_channels))
+    print(ws_channels.get(channel, []))
+    try:
+        print(f"🧪 channel: {channel} | type: {type(data)}")
+    except Exception as e:
+        print(f"💥 print error: {e}")
+
     for ws in ws_channels.get(channel, []):
         try:
-            print("None")
-            asyncio.create_task(ws.send_json(data))
+            await ws.send_json(data)
         except Exception as e:
-            print(f"WebSocket error on {channel}: {e}")
+            print(f"❌ WebSocket error: {e}")
+            try:
+                ws_channels[channel].remove(ws)
+            except ValueError:
+                pass
+    # for ws in ws_channels.get(channel, []):
+    #     try:
+    #         await asyncio.create_task(ws.send_json(data))
+    #     except Exception as e:
+    #         print(f"WebSocket error on {channel}: {e}")
 
 
 @router.websocket("/ws/order_list")
@@ -34,7 +60,6 @@ async def websocket_orders(websocket: WebSocket):
     await websocket.accept()
     ws_channels["order_list"].append(websocket)
     try:
-        print("None")
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
